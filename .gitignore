@@ -32,3 +32,6 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 .Rproj.user
+
+#ignore file system files
+.DS_Store
