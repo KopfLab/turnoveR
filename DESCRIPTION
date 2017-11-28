@@ -11,7 +11,8 @@ Imports:
   methods,
   tidyr,
   dplyr (>= 0.7.0),
-  readr
+  readr,
+  glue
 Suggests:
   testthat,
   knitr,

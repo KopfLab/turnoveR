@@ -4,6 +4,31 @@ output: html_document
 ---
 
 ```{r}
+devtools::load_all(".")
+filepath <- file.path("test_data", "svm_pred_results2.csv")
+svm_data <- read_svm_data_file(filepath)
+print(svm_data)
+```
+
+
+
+```{r}
+library(readr)
+read_csv(filepath, col_types = 
+           cols_only(
+              uniShort = col_character(),
+              prot = col_character(),
+              gene = col_character(),
+              seqz = col_character(),
+              mz = col_double(),
+              ppmerr = col_double(),
+              svmPred = col_double(),
+              ampU = col_double(),
+              ampL = col_double(),
+              sample = col_character(),
+              series = col_character()
+            )) %>% 
+  as_data_frame()
 
 ```
 
