@@ -1,0 +1,22 @@
+Package: turnoveR
+Title: What the Package Does (one line, title case)
+Version: 0.0.1.9000
+Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Description: What the package does (one paragraph).
+URL: https://github.com/kopflab/turnoveR
+BugReports: https://github.com/kopflab/turnoveR/issues
+Depends: 
+  R (>= 3.4.2)
+Imports:
+  methods,
+  tidyr,
+  dplyr (>= 0.7.0)
+Suggests:
+  testthat,
+  knitr,
+  rmarkdown
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1
