@@ -5,6 +5,6 @@
 #' @export
 read_svm_data_file <- function(filepath) {
 
-  #read_excel(filepath)
+
 
 }

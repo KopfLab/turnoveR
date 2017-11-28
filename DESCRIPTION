@@ -6,11 +6,12 @@ Description: What the package does (one paragraph).
 URL: https://github.com/kopflab/turnoveR
 BugReports: https://github.com/kopflab/turnoveR/issues
 Depends: 
-  R (>= 3.4.2)
+  R (>= 3.4)
 Imports:
   methods,
   tidyr,
-  dplyr (>= 0.7.0)
+  dplyr (>= 0.7.0),
+  readr
 Suggests:
   testthat,
   knitr,
