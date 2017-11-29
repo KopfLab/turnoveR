@@ -11,3 +11,11 @@ test_that("Testing read functions", {
   # check for warnings in a bad test file
   expect_warning(read_svm_data_file(file.path("test_data", "svm_pred_results_bad.csv")), "don't match the column names")
 })
+
+
+test_that("SVM processiong works", {
+
+  expect_error(process_svm_data())
+  expect_error(process_svm_data(5), "wrong data type")
+
+})
