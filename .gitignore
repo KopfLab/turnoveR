@@ -33,5 +33,7 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 
-#ignore file system files
+#ignore file system files and temporary files
 .DS_Store
+~$*
+

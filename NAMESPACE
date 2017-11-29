@@ -3,6 +3,8 @@
 export(read_svm_data_file)
 importFrom(dplyr,"%>%")
 importFrom(dplyr,as_data_frame)
+importFrom(dplyr,filter)
+importFrom(dplyr,mutate)
 importFrom(glue,collapse)
 importFrom(glue,glue)
 importFrom(readr,col_character)

@@ -4,7 +4,7 @@
 \alias{process_svm_data}
 \title{Process the SVM data}
 \usage{
-process_svm_data(svm_data, pred_cutof = 0.75)
+process_svm_data(svm_data, pred_cutoff = 0.75, quiet = FALSE)
 }
 \arguments{
 \item{svm_data}{the SVM data}
