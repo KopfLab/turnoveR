@@ -33,11 +33,19 @@ read_svm_data_file <- function(filepath) {
 }
 
 
+
+
 #' Process the SVM data
-#' @description bla
+#' @description process and filter data (Step 10 in current workflow)
 #' @param svm_data the SVM data
 #' @param pred_cutoff the probability cutoff from the svm prediction
 process_svm_data <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
+
+#add steps to rename proteins to match master list? (r code exists for this - asked Matt)
+  #a. read in "rename_prot.txt"
+  #b. compare protein names in SVM data to list
+  #c. change name depending on...?
+
 
   if (missing(svm_data)) stop("need to supply the svm data frame", call. =FALSE)
   if (!is.data.frame(svm_data)) {
@@ -60,3 +68,124 @@ process_svm_data <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
   return(filtered_data)
 }
 
+
+
+
+#' Calculate labeled fraction 1
+#' @description Calculate fraclab, add to metadata(replace excel step 11)
+#' @param  filtered_data the filtered svm data
+#' @param meta_data file?? should we write a separate function to read in metadata file?
+#' Maybe ask Matt what format is most useful (what else is in metadata that they use?)
+calculate_fraculab <- function(filtered_data, meta_data) {
+  fraculab_data <- filtered_data%>% #create new dataframe called fraculab
+    mutate #create new columns frac_ulab and frac_lab using ampU and ampL values from filtered dataset
+      (
+        frac_ulab = ampU / (ampU + ampL)
+        frac_lab = 1-frac_ulab
+      ) %>%
+    left_join(meta_data, by = "sample") %>%
+    select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_lab) %>%
+    arrange(sample, protein) %>%
+    spread(sample, frac_lab, fill = 0)
+
+  return(fraculab_data)
+}
+
+
+#OR
+
+
+#' Calculate labeled fraction and clean: added step to filter based on number timepoints where the peptide is identified
+#' @description Calculate fraclab, calculate number of occurences, add to metadata (Step 11 in workflow)
+#' @param  filtered_data the filtered data
+#' @param meta_data file?? should we write a separate function to read in metadata?
+#' @param min number of timepoints present
+#' another option is to make a separate function for filtering based on number of time points present
+calculate_fraculab_clean <- function(filtered_data, meta_data, min_timepoint_present = 3) {
+#meta_data <- readxl::read_excel(file.path("test_scripts", "metadata.xlsx"))
+
+  fraculab_data_clean <- filtered_data %>%
+  rename(unishort = uniShort, protein = prot, isopep = seqz) %>%
+  mutate(
+    frac_ulab = ampU / (ampU + ampL),
+    frac_lab = 1-frac_ulab
+  ) %>%
+  left_join(meta_data, by = "sample") %>%
+  group_by(protein, isopep) %>%
+  # calculate the number of time points where the peptide is identified
+  mutate(
+    n_time_points_identified = n()
+  ) %>% ungroup() %>%
+  # filter out the ones that are not present in enough time points
+  filter(n_time_points_identified > min_timepoint_present)
+
+  return(fraculab_data_clean)
+}
+
+
+
+
+#' Plot degradation curves
+#' @description create graphs showing proportion of unlabeled fraction over time to visualize degradation
+#' @param fraculab_data or fraculab_data_clean
+#' @param number of proteins (or peptides?) to plot?
+plot_deg_curve <- function(fraculab_data_clean, prots_to_plot = 10) {
+
+  fraculab_data_clean %>%
+    filter(prot %in% unique(prot)[1:prots_to_plot]) %>%
+    ggplot() +
+    aes(hours - min(hours), frac_lab, color = prot, shape = replicate, size = svmPred) +
+    geom_point() +
+    theme(legend.position="none") +
+    facet_wrap(~prot)
+  #library(plotly)
+  #ggplotly()
+
+}
+
+
+
+
+#' Calculate degradation rate, chisquared value
+#' @description calculate kdeg and chisquared (Step 12a-c in workflow, previously performed in Igor)
+#' @param fraculab_data or fraculab_data_clean
+calc_pep_degrate <- function(fraculab_data_clean) {
+
+  # fit each peptide to exponential equation y = Ae^dx (timepoint, frac_lab)
+  #extract d value for each peptide, store in new column
+  #calculate chisquared value, store in new column
+
+  # output example: return(deg_rate_data)
+}
+
+
+
+
+#' make master list: combine peptide data to protein level
+#' @description Average kdeg values of peptides per protein (Step 12d-e in workflow, previously performed in Igor)
+#' @param deg_rate_data
+#' @param min_chisq
+#' @param min_num_peptides
+make_prot_master <- function(deg_rate_data, min_chisq = 3, min_num_peptides=2) {
+
+  # average kdeg values for all peptides that correspond to single protein = kdegavg
+  # calculate number of peptides that correspond to sing protein = npep
+  # remove proteins that not meet min_chisq and min_num_peptide criteria
+
+  # output example: return(prot_sum_data)
+}
+
+
+
+
+#' Calculate real degradation rate, calculate dissipation rate
+#' @description Calculate the percent of the protein that was degraded during one generation(Step 12f-g in workflow, previously performed in Igor)
+#' @param prot_sum_data
+#' where does growth rate value come from?!
+calc_prot_dissipation <- function(prot_sum_data) {
+
+  # kdegReal = kdegavg - growth rate
+  # dissipation = kdegReal / (kdegReal + growth rate)
+
+  # output example: return(prot_disp_data)
+}
