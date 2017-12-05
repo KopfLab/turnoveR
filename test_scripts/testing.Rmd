@@ -19,15 +19,16 @@ svm_data <- read_svm_data_file(filepath)
 
 ```{r}
 svm_data %>% 
-  process_svm_data(pred_cutoff = 0.75) %>% 
-  mutate(
-    frac_ulab = ampU / (ampU + ampL),
-    frac_lab = 1-frac_ulab
-  ) %>% 
-  left_join(meta_data, by = "sample") %>% 
-  select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_lab) %>% 
-  arrange(sample, protein) %>% 
-  spread(sample, frac_lab, fill = 0)
+  rename_proteins(file.path("tests", "testthat", "test_data", "rename_prot.xlsx")) %>% 
+  process_svm_data(pred_cutoff = 0.75) 
+  # mutate(
+  #   frac_ulab = ampU / (ampU + ampL),
+  #   frac_lab = 1-frac_ulab
+  # ) %>% 
+  # left_join(meta_data, by = "sample") %>% 
+  # select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_lab) %>% 
+  # arrange(sample, protein) %>% 
+  # spread(sample, frac_lab, fill = 0)
 ```
 
 

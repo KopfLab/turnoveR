@@ -9,9 +9,11 @@ Depends:
   R (>= 3.4)
 Imports:
   methods,
+  rlang,
   tidyr,
   dplyr (>= 0.7.0),
   readr,
+  readxl,
   glue
 Suggests:
   testthat,

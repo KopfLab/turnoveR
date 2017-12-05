@@ -20,6 +20,24 @@ test_that("SVM processiong works", {
 
 })
 
+test_that("Renaming proteins works", {
+
+  # make sure errors are thrown
+  expect_error(rename_proteins())
+  expect_error(rename_proteins(5), "wrong data type")
+  expect_error(rename_proteins(data_frame(x=1)), "column .* does not exist")
+  expect_error(rename_proteins(data_frame(prot=1), prot_col = "my_protein"), "column .* does not exist")
+  expect_error(rename_proteins(data_frame(prot=1)), "mapping text file.* is required")
+  expect_error(rename_proteins(data_frame(prot=1), renaming_protein_map_file = "DNE"))
+  expect_error(rename_proteins(data_frame(prot = 1), file.path("test_data", "rename_prot_bad.xlsx")), "column .* does not exist")
+
+  # test specific data
+  my_test_data <- data_frame(prot = c("Q1PI83:KAD", "Q1PI83:KAD", "OTHER"))
+  expect_message(result <- rename_proteins(my_test_data, file.path("test_data", "rename_prot.xlsx")), "2 protein .* 1 different")
+  expect_equal(result, data_frame(prot = c("KAD", "KAD", "OTHER")))
+
+})
+
 #tests for "calculate_fraculab" function
 # - test that filtered_data file is correct format
 # - test that metadata file is correct format

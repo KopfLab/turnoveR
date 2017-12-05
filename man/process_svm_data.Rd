@@ -12,5 +12,5 @@ process_svm_data(svm_data, pred_cutoff = 0.75, quiet = FALSE)
 \item{pred_cutoff}{the probability cutoff from the svm prediction}
 }
 \description{
-bla
+process and filter data (Step 10 in current workflow)
 }
