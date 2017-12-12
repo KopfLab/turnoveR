@@ -41,12 +41,6 @@ read_svm_data_file <- function(filepath) {
 #' @param pred_cutoff the probability cutoff from the svm prediction
 process_svm_data <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
 
-#add steps to rename proteins to match master list? (r code exists for this - asked Matt)
-  #a. read in "rename_prot.txt"
-  #b. compare protein names in SVM data to list
-  #c. change name depending on...?
-
-
   if (missing(svm_data)) stop("need to supply the svm data frame", call. =FALSE)
   if (!is.data.frame(svm_data)) {
     glue("wrong data type supplied: {class(svm_data)[1]}") %>% stop(call. = FALSE)
@@ -126,59 +120,59 @@ rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", 
 #' Calculate labeled fraction 1
 #' @description Calculate fraclab, add to metadata(replace excel step 11)
 #' @param  filtered_data the filtered svm data
-#' @param meta_data file?? should we write a separate function to read in metadata file?
-#' Maybe ask Matt what format is most useful (what else is in metadata that they use?)
-calculate_fraculab <- function(data, meta_data) {
+
+calculate_fraculab <- function(data) {
+
+  #checking whether data file was supplied, and in correct format
+  if (missing(data)) stop("need to supply the data frame", call. =FALSE)
+  if (!is.data.frame(data)) {
+    glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
+  }
+
+  # adding columns for unlabeled and labeled fraction.
   data <- data %>%
     mutate(
       #create new columns frac_ulab and frac_lab using ampU and ampL values from filtered dataset
       frac_ulab = ampU / (ampU + ampL),
-      frac_lab = 1 - frac_ulab) %>%
-    left_join(meta_data, by = "sample") %>%
-    select(
-      unishort = uniShort,
-      protein = prot,
-      gene,
-      isopep = seqz,
-      sample,
-      frac_lab
-    ) %>%
-    arrange(sample, protein) %>%
-    spread(sample, frac_lab, fill = 0)
+      frac_lab = 1 - frac_ulab)
+
 
   return(data)
+
 }
 
 
-#OR
 
-
-#' Calculate labeled fraction and clean: added step to filter based on number timepoints where the peptide is identified
-#' @description Calculate fraclab, calculate number of occurences, add to metadata (Step 11 in workflow)
-#' @param  filtered_data the filtered data
-#' @param meta_data file?? should we write a separate function to read in metadata?
+#' Filter data based on number of timepoints where the peptide is identified
+#' @description (Step 11 in workflow)
+#' @param  data the data to be filtered
 #' @param min number of timepoints present
-#' another option is to make a separate function for filtering based on number of time points present
-calculate_fraculab_clean <- function(filtered_data, meta_data, min_timepoint_present = 3) {
-#meta_data <- readxl::read_excel(file.path("test_scripts", "metadata.xlsx"))
+filter_min_timepoints <-function(data, min_timepoint_present = 3, quiet = FALSE) {
+    #checking whether data file was supplied, and in correct format
+    if (missing(data))
+      stop("need to supply the data frame", call. = FALSE)
+    if (!is.data.frame(data)) {
+      glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
+    }
 
-  fraculab_data_clean <- filtered_data %>%
-  rename(unishort = uniShort, protein = prot, isopep = seqz) %>%
-  mutate(
-    frac_ulab = ampU / (ampU + ampL),
-    frac_lab = 1-frac_ulab
-  ) %>%
-  left_join(meta_data, by = "sample") %>%
-  group_by(protein, isopep) %>%
-  # calculate the number of time points where the peptide is identified
-  mutate(
-    n_time_points_identified = n()
-  ) %>% ungroup() %>%
-  # filter out the ones that are not present in enough time points
-  filter(n_time_points_identified > min_timepoint_present)
+    filtered_data <- data %>%
+      group_by(protein, isopep) %>%
+      # calculate the number of time points where the peptide is identified
+      mutate(n_time_points_identified = n()) %>% ungroup() %>%
+      # filter out the ones that are not present in enough time points
+      filter(n_time_points_identified > min_timepoint_present)
 
-  return(fraculab_data_clean)
-}
+    # information for user
+    if (!quiet) {
+      n_original <- nrow(data)
+      n_discarded <- nrow(data) - nrow(filtered_data)
+      glue(
+        "Info: discarded {n_discarded} of {n_original} ({round(n_discarded/n_original*100, 1)}%) rows"
+      ) %>%
+        message()
+    }
+    return(data)
+  }
 
 
 

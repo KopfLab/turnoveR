@@ -39,9 +39,27 @@ test_that("Renaming proteins works", {
 })
 
 #tests for "calculate_fraculab" function
+test_that("calculate_fraculab works", {
+
 # - test that filtered_data file is correct format
-# - test that metadata file is correct format
-# - test that fraculab and fraclab calculations are correct (and / or used correct inputs to calculate)
+  expect_error(calculate_fraculab())
+  expect_error(calculate_fraculab(5), "wrong data type")
+
+# test specific data
+  # test that correct inputs used to calculate
+  # test that fraculab and fraclab calculations are correct
+})
+
+#tests for "filter_min_timepoints" function
+test_that("filter_min_timepoints works", {
+
+  # - test that data file is correct format
+  expect_error(filter_min_timepoints())
+  expect_error(filter_min_timepoints(5), "wrong data type")
+
+})
+
+
 
 #tests for "calc_pep_degrate" function
 # - test that input file is correct format
