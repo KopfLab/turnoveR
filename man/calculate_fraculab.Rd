@@ -4,12 +4,9 @@
 \alias{calculate_fraculab}
 \title{Calculate labeled fraction 1}
 \usage{
-calculate_fraculab(data, meta_data)
+calculate_fraculab(data)
 }
 \arguments{
-\item{meta_data}{file?? should we write a separate function to read in metadata file?
-Maybe ask Matt what format is most useful (what else is in metadata that they use?)}
-
 \item{filtered_data}{the filtered svm data}
 }
 \description{
