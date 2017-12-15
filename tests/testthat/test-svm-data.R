@@ -15,8 +15,8 @@ test_that("Testing read functions", {
 
 test_that("SVM processiong works", {
 
-  expect_error(process_svm_data())
-  expect_error(process_svm_data(5), "wrong data type")
+  expect_error(filter_peptides_by_spectral_fit())
+  expect_error(filter_peptides_by_spectral_fit(5), "wrong data type")
 
 })
 

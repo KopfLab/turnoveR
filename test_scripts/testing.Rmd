@@ -20,7 +20,7 @@ svm_data <- read_svm_data_file(filepath)
 ```{r}
 svm_data %>% 
   rename_proteins(file.path("tests", "testthat", "test_data", "rename_prot.xlsx")) %>% 
-  process_svm_data(pred_cutoff = 0.75) 
+  filter_peptides_by_spectral_fit(pred_cutoff = 0.75) 
   # mutate(
   #   frac_ulab = ampU / (ampU + ampL),
   #   frac_lab = 1-frac_ulab
@@ -37,7 +37,7 @@ svm_data %>%
 meta_data <- readxl::read_excel(file.path("test_scripts", "metadata.xlsx"))
 
 processed_data <- svm_data %>% 
-  process_svm_data(pred_cutoff = 0.75) %>% 
+  filter_peptides_by_spectral_fit(pred_cutoff = 0.75) %>% 
   rename(unishort = uniShort, protein = prot, isopep = seqz) %>% 
   mutate(
     frac_ulab = ampU / (ampU + ampL),

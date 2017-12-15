@@ -1,3 +1,5 @@
+# finished --
+
 #' Read SVM data file
 #' @description This functions reads the data file
 #' @param filepath the path to the svm data file
@@ -33,13 +35,14 @@ read_svm_data_file <- function(filepath) {
 }
 
 
-
+# finished but should find a better name (filtering?) and also will have to work with
+# filtering criteria other than pred_cutoff (once we determine which filter criteria are actually most useful)
 
 #' Process the SVM data
 #' @description process and filter data (Step 10 in current workflow)
 #' @param svm_data the SVM data
 #' @param pred_cutoff the probability cutoff from the svm prediction
-process_svm_data <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
+filter_peptides_by_spectral_fit <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
 
   if (missing(svm_data)) stop("need to supply the svm data frame", call. =FALSE)
   if (!is.data.frame(svm_data)) {
@@ -54,14 +57,16 @@ process_svm_data <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
   # information for user
   if (!quiet) {
     n_original <- nrow(svm_data)
-    n_discarded <- nrow(svm_data) - nrow(filtered_data)
-    glue("Info: discarded {n_discarded} of {n_original} ({round(n_discarded/n_original*100, 1)}%) rows") %>%
+    n_kept <- nrow(filtered_data)
+    glue("Info: kept {n_kept} of {n_original} ({round(n_kept/n_original*100, 1)}%) peptide measurements") %>%
       message()
   }
 
   return(filtered_data)
 }
 
+
+# -- finished
 
 #' @param data the data set
 #' @param renaming_protein_map_file the filepath to the xlsx mapping file
@@ -117,10 +122,12 @@ rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", 
 }
 
 
+# finished -- maybe change name to something calculate_labeled_fraction?
+
 #' Calculate labeled fraction 1
 #' @description Calculate fraclab, add to metadata(replace excel step 11)
 #' @param  filtered_data the filtered svm data
-
+#' @export
 calculate_fraculab <- function(data) {
 
   #checking whether data file was supplied, and in correct format
@@ -141,7 +148,7 @@ calculate_fraculab <- function(data) {
 
 }
 
-
+# finished -- except for maybe a few more checks AND allow for overwriting default column names
 
 #' Filter data based on number of timepoints where the peptide is identified
 #' @description (Step 11 in workflow)
@@ -155,6 +162,8 @@ filter_min_timepoints <-function(data, min_timepoint_present = 3, quiet = FALSE)
       glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
     }
 
+    # @TODO: maybe add safety checks that the expected columns are present: protein, isopep, etc.
+
     filtered_data <- data %>%
       group_by(protein, isopep) %>%
       # calculate the number of time points where the peptide is identified
@@ -165,9 +174,9 @@ filter_min_timepoints <-function(data, min_timepoint_present = 3, quiet = FALSE)
     # information for user
     if (!quiet) {
       n_original <- nrow(data)
-      n_discarded <- nrow(data) - nrow(filtered_data)
+      n_kept <- nrow(filtered_data)
       glue(
-        "Info: discarded {n_discarded} of {n_original} ({round(n_discarded/n_original*100, 1)}%) rows"
+        "Info: kept {n_kept} of {n_original} ({round(n_kept/n_original*100, 1)}%) rows"
       ) %>%
         message()
     }
