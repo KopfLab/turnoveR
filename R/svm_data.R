@@ -35,8 +35,7 @@ read_svm_data_file <- function(filepath) {
 }
 
 
-# finished but should find a better name (filtering?) and also will have to work with
-# filtering criteria other than pred_cutoff (once we determine which filter criteria are actually most useful)
+# finished but will have to work with filtering criteria other than pred_cutoff (once we determine which filter criteria are actually most useful)
 
 #' Process the SVM data
 #' @description process and filter data (Step 10 in current workflow)
@@ -123,6 +122,7 @@ rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", 
 
 
 # finished -- maybe change name to something calculate_labeled_fraction?
+# add option for columns being differently names (ampU, amplL)
 
 #' Calculate labeled fraction 1
 #' @description Calculate fraclab, add to metadata(replace excel step 11)
@@ -180,7 +180,7 @@ filter_min_timepoints <-function(data, min_timepoint_present = 3, quiet = FALSE)
       ) %>%
         message()
     }
-    return(data)
+    return(filtered_data)
   }
 
 
