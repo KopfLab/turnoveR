@@ -6,6 +6,10 @@ output: html_document
 ```{r setup}
 library(tidyverse)
 library(stringr)
+library(readxl)
+library(knitr)
+library(broom)
+library(modelr)
 ```
 
 
@@ -13,56 +17,100 @@ library(stringr)
 devtools::load_all(".")
 filepath <- file.path("tests", "testthat", "test_data", "svm_pred_results.csv")
 svm_data <- read_svm_data_file(filepath)
+metadata <- read_excel(file.path("test_scripts", "metadata.xlsx"))
+kable(metadata, d=2)
 ```
 
 
 
 ```{r}
-svm_data %>% 
+svm_data_filtered <- 
+  svm_data %>% 
+  # turnover function
   rename_proteins(file.path("tests", "testthat", "test_data", "rename_prot.xlsx")) %>% 
-  filter_peptides_by_spectral_fit(pred_cutoff = 0.75) 
-  # mutate(
-  #   frac_ulab = ampU / (ampU + ampL),
-  #   frac_lab = 1-frac_ulab
-  # ) %>% 
-  # left_join(meta_data, by = "sample") %>% 
-  # select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_lab) %>% 
-  # arrange(sample, protein) %>% 
-  # spread(sample, frac_lab, fill = 0)
-```
-
-
-
-```{r}
-meta_data <- readxl::read_excel(file.path("test_scripts", "metadata.xlsx"))
-
-processed_data <- svm_data %>% 
+  # turnover function
   filter_peptides_by_spectral_fit(pred_cutoff = 0.75) %>% 
-  rename(unishort = uniShort, protein = prot, isopep = seqz) %>% 
-  mutate(
-    frac_ulab = ampU / (ampU + ampL),
-    frac_lab = 1-frac_ulab
-  ) %>% 
-  left_join(meta_data, by = "sample") %>% 
-  group_by(protein, isopep) %>%
-  # calculate the number of time points where the peptide is identified
-  mutate(
-    n_time_points_identified = n()
-  ) %>% ungroup() %>% 
-  # filter out the ones that are not present in enough time points
-  filter(n_time_points_identified > 3)
+  # turnover function
+  calculate_fraculab() %>% 
+  # adjust names (not a turnover function)
+  select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_ulab, frac_lab) %>% 
+  # turnover function
+  filter_min_timepoints(min_timepoint_present = 3) %>% 
+  # add metatdata to get times for samples - should this be a turnover function?
+  left_join(metadata, by = "sample")
 ```
 
 
 ```{r}
-processed_data %>% 
-  filter(prot %in% unique(prot)[1:10]) %>% 
+# svm_data_filtered %>% 
+#   filter(isopep %in% c("LGGMVWR/2", "YPLISELK/2")) %>% 
+  ggplot() + aes(hours, log(frac_ulab), color =isopep) +
+  geom_point() + geom_line()
+```
+
+
+```{r}
+safe_nls <- safely(nls)
+
+system.time(
+svm_models2 <- 
+  svm_data_filtered %>% 
+  filter(isopep %in% c("AEYLESPTIDER/2"  , "TTVNGMPALR/2"   ,        "LSASYVGEDNER/2"   ,      "ATCVFAEPQFRPAVVESVAR/3")) %>% 
+  nest(-protein, -isopep) %>% 
+  mutate(
+    lm_fit = map(data, ~lm(log(frac_ulab) ~ hours - 1, data = .x)),
+    lm_coefficients = map(lm_fit, tidy),
+    lm_summary = map(lm_fit, glance),
+    # lm_fit_curve = map2(data, lm_fit, ~data_grid(.x, hours = seq_range(hours, 10)) %>%
+    #                       add_predictions(.y, var = "ln_frac_ulab") %>% mutate(frac_ulab = exp(ln_frac_ulab))),
+    nls_safe_fit = map(data, ~safe_nls(frac_ulab ~ exp(-k_synth * hours), start = list(k_synth = 1), data  = .x, algorithm = "plinear")),
+    nls_error = map(nls_safe_fit, ~.x$error),
+    nls_fit = map(nls_safe_fit, ~.x$result),
+    nls_coefficients = map(nls_fit, tidy),
+    nls_summary = map(nls_fit, glance)
+    #,
+    #nls_fit_curve = map2(data, nls_fit, ~data_grid(.x, hours = seq_range(hours, 10)) %>% 
+    #                      add_predictions(.y, var = "frac_ulab"))
+  ) 
+)
+```
+
+```{r}
+svm_models %>% 
+  unnest(lm_coefficients) %>% 
+  filter(term == "hours") %>% 
+  { -.$estimate } %>% 
+  hist()
+```
+
+
+```{r}
+svm_models2 %>% 
+  unnest(lm_summary) %>% 
+  unnest(lm_coefficients) %>% 
   ggplot() +
-  aes(hours - min(hours), frac_lab, color = prot, shape = replicate, size = svmPred) +
+  aes(x = r.squared, y = -estimate, color = protein) +
   geom_point() +
-  theme(legend.position="none") +
-  facet_wrap(~prot)
-#library(plotly)
-#ggplotly()
+  theme(legend.position = "none")
+```
+
+
+```{r}
+svm_models2 %>% 
+  ggplot() + 
+  aes(x = hours, y = frac_ulab, color = isopep) + 
+  geom_line(data = function(x) unnest(x, lm_fit_curve)) +
+  #geom_line(data = function(x) unnest(x, nls_fit_curve), linetype = 2) +
+  geom_point(data = function(x) unnest(x, data)) 
+  # geom_vline(data = function(x) unnest(x, nls_coefficients) %>% filter(term == "k_synth") %>% mutate(dblt = log(2) / estimate),
+  #            map = aes(xintercept = dblt, color = isopep)
+  #            )
+```
+
+```{r}
+svm_models %>% mutate(is_okay = map_lgl(nls_error, is.null)) %>% filter(!is_okay) %>% 
+  ggplot() +
+  aes(x = hours, y = frac_ulab, color = isopep) +
+  geom_point(data = function(x) unnest(x, data)) 
 ```
 
