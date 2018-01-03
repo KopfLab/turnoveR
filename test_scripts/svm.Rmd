@@ -1,0 +1,88 @@
+---
+title: "SVM Testing"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(e1071)
+library(rpart)
+data(Glass, package="mlbench")
+glass <- as_data_frame(Glass)
+print(glass)
+```
+
+```{r}
+## split data into a train and test set
+testindex <- sample(1:nrow(glass), trunc(nrow(glass)/3))
+testset   <- glass[testindex,]
+trainset  <- glass[-testindex,]
+```
+
+
+```{r}
+## svm
+svm.model <- svm(Type ~ ., data = trainset, cost = 100, gamma = 1)
+print(summary(svm.model))
+svm.pred  <- predict(svm.model, select(testset, -Type))
+table(pred = svm.pred, true = testset$Type)
+```
+
+
+```{r}
+## use svm tune to find best parameters
+svm_tune <- tune.svm(Type ~ ., data = glass,
+              kernel="radial", cost=seq(1,41, by=5), gamma=seq(0.1, 1.1, by = 0.2))
+
+summary(svm_tune)
+plot(svm_tune)
+```
+
+
+```{r}
+# rerun with optimized parameters
+svm.model_optim <- svm(Type ~ ., data = trainset, cost = 6, gamma = 0.7)
+print(summary(svm.model_optim))
+svm.pred_optim  <- predict(svm.model_optim, select(testset, -Type))
+table(pred = svm.pred_optim, true = testset$Type)
+```
+
+# Example with iris
+
+```{r}
+model <- svm(Species ~ ., data = iris, probability=TRUE)
+
+# alternatively the traditional interface:
+x <- subset(iris, select = -Species)
+y <- Species
+model <- svm(x, y) 
+
+print(model)
+summary(model)
+
+# test with train data
+pred <- predict(model, x)
+# (same as:)
+pred <- fitted(model)
+
+# Check accuracy:
+table(pred, iris$Species)
+dont_fit <- which( pred %>% as.character() != iris$Species)
+
+# compute decision values and probabilities:
+# NOTE: this is what's going to be super useful
+pred <- predict(model, x, probability=TRUE, decision.values = TRUE)
+print(attr(pred, "decision.values")[1:4,])
+all_probs <- attr(pred, "probabilities") %>% as_data_frame()
+print(all_probs[dont_fit,])
+
+# visualize (classes by color, SV by crosses):
+# --> do this in ggplot
+plot(cmdscale(dist(iris[,-5])),
+     col = as.integer(iris[,5]),
+     pch = c("o","+")[1:150 %in% model$index + 1])
+
+```
+
+
+

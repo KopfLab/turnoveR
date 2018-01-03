@@ -1,6 +1,8 @@
 ---
 title: "Testing the file read"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup}
@@ -10,6 +12,9 @@ library(readxl)
 library(knitr)
 library(broom)
 library(modelr)
+library(plotly)
+library(glue)
+knitr::opts_knit$set(root.dir = "..") 
 ```
 
 
@@ -42,75 +47,152 @@ svm_data_filtered <-
 
 
 ```{r}
-# svm_data_filtered %>% 
-#   filter(isopep %in% c("LGGMVWR/2", "YPLISELK/2")) %>% 
-  ggplot() + aes(hours, log(frac_ulab), color =isopep) +
-  geom_point() + geom_line()
-```
-
-
-```{r}
+# make sure to catch non-convergent NLS
 safe_nls <- safely(nls)
 
 system.time(
-svm_models2 <- 
+svm_models <- 
   svm_data_filtered %>% 
-  filter(isopep %in% c("AEYLESPTIDER/2"  , "TTVNGMPALR/2"   ,        "LSASYVGEDNER/2"   ,      "ATCVFAEPQFRPAVVESVAR/3")) %>% 
+  #filter(isopep %in% c("AEYLESPTIDER/2"  , "TTVNGMPALR/2"   ,        "LSASYVGEDNER/2"   ,      "ATCVFAEPQFRPAVVESVAR/3")) %>% 
   nest(-protein, -isopep) %>% 
   mutate(
-    lm_fit = map(data, ~lm(log(frac_ulab) ~ hours - 1, data = .x)),
+    lm_fit = map(data, ~lm(-log(1 - frac_lab) ~ hours - 1, data = .x)),
     lm_coefficients = map(lm_fit, tidy),
     lm_summary = map(lm_fit, glance),
-    # lm_fit_curve = map2(data, lm_fit, ~data_grid(.x, hours = seq_range(hours, 10)) %>%
-    #                       add_predictions(.y, var = "ln_frac_ulab") %>% mutate(frac_ulab = exp(ln_frac_ulab))),
-    nls_safe_fit = map(data, ~safe_nls(frac_ulab ~ exp(-k_synth * hours), start = list(k_synth = 1), data  = .x, algorithm = "plinear")),
-    nls_error = map(nls_safe_fit, ~.x$error),
+    # use linear fit as a starting estimate for non-linear fit
+    nls_safe_fit = map2(data, lm_coefficients, ~safe_nls(frac_lab ~ 1 - exp(-k_synth * hours), start = list(k_synth = .y$estimate), data  = .x)),
+    nls_error = map_lgl(nls_safe_fit, ~!is.null(.x$error)),
     nls_fit = map(nls_safe_fit, ~.x$result),
     nls_coefficients = map(nls_fit, tidy),
-    nls_summary = map(nls_fit, glance)
-    #,
-    #nls_fit_curve = map2(data, nls_fit, ~data_grid(.x, hours = seq_range(hours, 10)) %>% 
-    #                      add_predictions(.y, var = "frac_ulab"))
-  ) 
+    nls_summary = map(nls_fit, glance),
+    # non-linear fit without tp 0
+    nls_safe_fit_non0 = map2(data, lm_coefficients, ~safe_nls(frac_lab ~ 1 - exp(-k_synth * hours), start = list(k_synth = .y$estimate), data  = filter(.x, hours > 0))),
+    nls_error_non0 = map_lgl(nls_safe_fit, ~!is.null(.x$error)),
+    nls_fit_non0 = map(nls_safe_fit, ~.x$result),
+    nls_coefficients_non0 = map(nls_fit, tidy),
+    nls_summary_non0 = map(nls_fit, glance)
+  ) %>% 
+  # don't need nls safe fit
+  select(-nls_safe_fit, -nls_safe_fit_non0) 
 )
+
+glue("{nrow(filter(svm_models, nls_error))} of the NLS fit did not converge")
 ```
 
 ```{r}
+# plot histogram of estimates
 svm_models %>% 
-  unnest(lm_coefficients) %>% 
-  filter(term == "hours") %>% 
-  { -.$estimate } %>% 
-  hist()
+  unnest(nls_coefficients) %>% 
+  ggplot() + aes(x = estimate) + 
+  geom_histogram(binwidth = 0.01) +
+  facet_wrap(~term)
+```
+
+```{r}
+# plot lm vs nls estimates
+svm_models %>% 
+  filter(!nls_error) %>% 
+  mutate(nls_estimate = map_dbl(nls_coefficients, ~.x$estimate),
+         lm_estimate = map_dbl(lm_coefficients, ~.x$estimate)) %>% 
+  ggplot()+
+  aes(x = nls_estimate, y = (nls_estimate - lm_estimate), color = protein) +
+  geom_ref_line(h=0) + 
+  geom_point() + 
+  theme(legend.position = "none") 
 ```
 
 
 ```{r}
-svm_models2 %>% 
-  unnest(lm_summary) %>% 
-  unnest(lm_coefficients) %>% 
-  ggplot() +
-  aes(x = r.squared, y = -estimate, color = protein) +
-  geom_point() +
-  theme(legend.position = "none")
-```
-
-
-```{r}
-svm_models2 %>% 
+# plot data with curves for those where lm and nls estimate are vasly different
+svm_models %>% 
+  filter(!nls_error) %>% 
+  mutate(nls_estimate = map_dbl(nls_coefficients, ~.x$estimate),
+         lm_estimate = map_dbl(lm_coefficients, ~.x$estimate)) %>% 
+  filter(abs((nls_estimate - lm_estimate)) > 0.02) %>% 
+  # calculate curves
+  mutate(
+    lm_fit_curve = map2(data, lm_fit, ~data_grid(.x, hours = seq_range(c(0, hours), 20)) %>%
+                          add_predictions(.y, var = "ln_frac_ulab") %>% mutate(frac_lab = 1 - exp(-ln_frac_ulab))),
+    nls_fit_curve = map2(data, nls_fit, ~data_grid(.x, hours = seq_range(hours, 20)) %>% 
+                           add_predictions(.y, var = "frac_lab"))
+  ) %>% 
   ggplot() + 
-  aes(x = hours, y = frac_ulab, color = isopep) + 
-  geom_line(data = function(x) unnest(x, lm_fit_curve)) +
-  #geom_line(data = function(x) unnest(x, nls_fit_curve), linetype = 2) +
+  aes(x = hours, y = frac_lab, color = protein, group = isopep) + 
+  geom_line(data = function(x) unnest(x, lm_fit_curve) %>% mutate(fit = "log-linear"), map = aes(linetype = fit)) +
+  geom_line(data = function(x) unnest(x, nls_fit_curve) %>% mutate(fit = "exponential"), map = aes(linetype = fit)) +
   geom_point(data = function(x) unnest(x, data)) 
-  # geom_vline(data = function(x) unnest(x, nls_coefficients) %>% filter(term == "k_synth") %>% mutate(dblt = log(2) / estimate),
-  #            map = aes(xintercept = dblt, color = isopep)
-  #            )
 ```
 
-```{r}
-svm_models %>% mutate(is_okay = map_lgl(nls_error, is.null)) %>% filter(!is_okay) %>% 
+
+```{r, fig.width = 8, fig.height=8}
+# residual standard error vs. chi-squared
+svm_models %>%
+  mutate(
+    # calculate chi-square assuming sigma = 0.05
+    chi_square = map_dbl(nls_fit, ~sum(residuals(.x)^2)/(0.05^2))
+  ) %>% 
+  # get sigma (residual standard error)
+  unnest(nls_summary) %>% 
   ggplot() +
-  aes(x = hours, y = frac_ulab, color = isopep) +
-  geom_point(data = function(x) unnest(x, data)) 
+  aes(x = chi_square, y = 100*sigma, color = factor(df.residual), group=isopep) +
+  geom_vline(xintercept = 3) +
+  geom_point() +
+  theme(legend.position = "none") +
+  labs(y = "residual standard error (% labelled)", x = "chi squared")
+ggplotly()
+```
+
+
+```{r, fig.width = 8, fig.height=7}
+# plot estimates vs their residual standard error (+ the error of the estimate itself)
+svm_models %>%
+  unnest(nls_summary) %>% 
+  unnest(nls_coefficients) %>% 
+  ggplot() +
+  aes(x = estimate, y = 100*sigma, color = protein, group=isopep) +
+  geom_errorbarh(map = aes(xmin = estimate - std.error, xmax = estimate + std.error)) +
+  geom_point() +
+  theme(legend.position = "none") + 
+  labs(y = "residual standard error (% labelled)", x = "d estimate")
+ggplotly()
+```
+
+# What do the different residual standard error ranges look like?
+
+Note: resid. SE would look different if tp=0 were not included in the fit (i.e. assuming tp 0 would always be 0% labeled and any measurements that indicates not 0 tp would not be relevant)
+
+```{r fig.width = 10, fig.height=10}
+se_groups <- c(1, 2.5, 5, 7.5, 10, 15, 20, 25, 30)
+
+# plot data based on standard error to get a sense for cutoffs
+p <- svm_models %>%
+  filter(!nls_error) %>%
+  mutate(
+    nls_resid_se = 100*map_dbl(nls_summary, ~.x$sigma),
+    se_group = map_dbl(nls_resid_se, ~sum(.x > se_groups) + 1),
+    se_group_name = map_dbl(se_group, ~se_groups[.x])
+  ) %>%
+  arrange(se_group, desc(nls_resid_se)) %>% 
+  group_by(se_group) %>% mutate(se_group_nr = 1:n()) %>% ungroup() %>% 
+  # select up to 3 in each group
+  filter(se_group_nr <= 3) %>% 
+  #filter(nls_resid_se > 15) %>%
+  # NOTE: select random set of curves in different intervals of resid.SE
+  # randomly select 9 curves
+  arrange(nls_resid_se) %>% 
+  mutate(panel = forcats::as_factor(paste("resid. SE [% labeled] about", se_group_name))) %>% 
+  # calculate curves
+  mutate(
+    nls_fit_curve = map2(data, nls_fit, ~data_grid(.x, hours = seq_range(hours, 20)) %>%
+                           add_predictions(.y, var = "frac_lab"))
+  ) %>%
+  # plot
+  ggplot() +
+  aes(x = hours, y = frac_lab, color = protein, group = isopep, label = nls_resid_se) +
+  geom_line(data = function(x) unnest(x, nls_fit_curve)) +
+  geom_line(data = function(x) unnest(x, data), linetype = 2) +
+  geom_point(data = function(x) unnest(x, data)) +
+  facet_wrap(~panel)
+ggplotly(p)
 ```
 
