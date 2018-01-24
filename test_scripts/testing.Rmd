@@ -45,6 +45,13 @@ svm_data_filtered <-
   left_join(metadata, by = "sample")
 ```
 
+```{r}
+devtools::load_all()
+calculate_label_rate(test_data, quiet = TRUE) 
+
+```
+
+
 
 ```{r}
 # make sure to catch non-convergent NLS

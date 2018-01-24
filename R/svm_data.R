@@ -8,7 +8,7 @@
 read_svm_data_file <- function(filepath) {
 
   if(!file.exists(filepath)) {
-    glue("This svm file does not seem to exist '{filepath}'") %>%
+    glue("This svm file does not seem to exist '{filepath}' in the current working directory") %>%
     stop(call. = FALSE)
   }
 
@@ -207,17 +207,7 @@ plot_deg_curve <- function(fraculab_data_clean, prots_to_plot = 10) {
 
 
 
-#' Calculate degradation rate, chisquared value
-#' @description calculate kdeg and chisquared (Step 12a-c in workflow, previously performed in Igor)
-#' @param fraculab_data or fraculab_data_clean
-calc_pep_degrate <- function(fraculab_data_clean) {
 
-  # fit each peptide to exponential equation y = Ae^dx (timepoint, frac_lab)
-  #extract d value for each peptide, store in new column
-  #calculate chisquared value, store in new column
-
-  # output example: return(deg_rate_data)
-}
 
 
 

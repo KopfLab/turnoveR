@@ -14,7 +14,9 @@ Imports:
   dplyr (>= 0.7.0),
   readr,
   readxl,
-  glue
+  glue, 
+  purrr, 
+  broom
 Suggests:
   testthat,
   knitr,
