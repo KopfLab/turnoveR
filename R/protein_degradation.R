@@ -35,7 +35,6 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
     num_timepoints = map_int(filtered_data, ~length(unique(.x$hours))),
     num_datapoints = map_int(filtered_data, ~length(.x$hours)),
 
-
     enough_data = num_timepoints > 1,
     lm_fit = map2(filtered_data, enough_data, ~if(.y){ lm(-log(1 - frac_lab) ~ hours - 1, data = .x) } else {(NULL)}),
     lm_coefficients = map(lm_fit, tidy),
@@ -44,11 +43,11 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
     nls_safe_fit = map2(nested_data, lm_coefficients, ~safe_nls(frac_lab ~ 1 - exp(-k_synth * hours), start = list(k_synth = .y$estimate), data = .x)),
     nls_error = map_lgl(nls_safe_fit, ~!is.null(.x$error)),
     nls_fit = map2(nls_safe_fit, enough_data, ~if(.y){.x$result} else {NULL}),
-     nls_coefficients = map(nls_fit, tidy),
-     nls_summary = map(nls_fit, glance)
+    nls_coefficients = map(nls_fit, tidy),
+    nls_summary = map(nls_fit, glance)
   ) %>%
     # don't need nls safe fit
-    select(-nls_safe_fit)
+    select(-nls_safe_fit, -filtered_data)
 
   if (!quiet) {
     glue("{nrow(filter(data, !nls_error))} of the {if(combine_peptides)'proteins' else 'peptides'} could be fit to a labeling curve.") %>%
