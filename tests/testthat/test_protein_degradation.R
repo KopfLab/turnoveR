@@ -1,5 +1,12 @@
 context("Testing protein degradation calculation functions")
 
+test_that("Testing file quality", {
+
+  #test that input data file is correct format
+  expect_error(calculate_label_rate())
+  expect_error(calculate_label_rate(5), "wrong data type")
+
+})
 
 test_that("Testing protein labeling rate", {
 
