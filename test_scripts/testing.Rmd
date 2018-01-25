@@ -47,119 +47,49 @@ svm_data_filtered <-
 
 ```{r}
 devtools::load_all()
-calculate_label_rate(svm_data_filtered, quiet = TRUE) 
+svm_data_rates <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>% 
+  filter(enough_data, !fit_error) %>% 
+  select(-enough_data, -fit_error) %>% 
+  calculate_degrate_dissipation()
 
 ```
 
 
-
-```{r}
-# make sure to catch non-convergent NLS
-safe_nls <- safely(nls)
-
-system.time(
-svm_models <- 
-  svm_data_filtered %>% 
-  #filter(isopep %in% c("AEYLESPTIDER/2"  , "TTVNGMPALR/2"   ,        "LSASYVGEDNER/2"   ,      "ATCVFAEPQFRPAVVESVAR/3")) %>% 
-  nest(-protein, -isopep) %>% 
-  mutate(
-    lm_fit = map(data, ~lm(-log(1 - frac_lab) ~ hours - 1, data = .x)),
-    lm_coefficients = map(lm_fit, tidy),
-    lm_summary = map(lm_fit, glance),
-    # use linear fit as a starting estimate for non-linear fit
-    nls_safe_fit = map2(data, lm_coefficients, ~safe_nls(frac_lab ~ 1 - exp(-k_synth * hours), start = list(k_synth = .y$estimate), data  = .x)),
-    nls_error = map_lgl(nls_safe_fit, ~!is.null(.x$error)),
-    nls_fit = map(nls_safe_fit, ~.x$result),
-    nls_coefficients = map(nls_fit, tidy),
-    nls_summary = map(nls_fit, glance),
-    # non-linear fit without tp 0
-    nls_safe_fit_non0 = map2(data, lm_coefficients, ~safe_nls(frac_lab ~ 1 - exp(-k_synth * hours), start = list(k_synth = .y$estimate), data  = filter(.x, hours > 0))),
-    nls_error_non0 = map_lgl(nls_safe_fit, ~!is.null(.x$error)),
-    nls_fit_non0 = map(nls_safe_fit, ~.x$result),
-    nls_coefficients_non0 = map(nls_fit, tidy),
-    nls_summary_non0 = map(nls_fit, glance)
-  ) %>% 
-  # don't need nls safe fit
-  select(-nls_safe_fit, -nls_safe_fit_non0) 
-)
-
-glue("{nrow(filter(svm_models, nls_error))} of the NLS fit did not converge")
-```
 
 ```{r}
 # plot histogram of estimates
-svm_models %>% 
-  unnest(nls_coefficients) %>% 
-  ggplot() + aes(x = estimate) + 
-  geom_histogram(binwidth = 0.01) +
-  facet_wrap(~term)
-```
-
-```{r}
-# plot lm vs nls estimates
-svm_models %>% 
-  filter(!nls_error) %>% 
-  mutate(nls_estimate = map_dbl(nls_coefficients, ~.x$estimate),
-         lm_estimate = map_dbl(lm_coefficients, ~.x$estimate)) %>% 
-  ggplot()+
-  aes(x = nls_estimate, y = (nls_estimate - lm_estimate), color = protein) +
-  geom_ref_line(h=0) + 
-  geom_point() + 
-  theme(legend.position = "none") 
-```
-
-
-```{r}
-# plot data with curves for those where lm and nls estimate are vasly different
-svm_models %>% 
-  filter(!nls_error) %>% 
-  mutate(nls_estimate = map_dbl(nls_coefficients, ~.x$estimate),
-         lm_estimate = map_dbl(lm_coefficients, ~.x$estimate)) %>% 
-  filter(abs((nls_estimate - lm_estimate)) > 0.02) %>% 
-  # calculate curves
-  mutate(
-    lm_fit_curve = map2(data, lm_fit, ~data_grid(.x, hours = seq_range(c(0, hours), 20)) %>%
-                          add_predictions(.y, var = "ln_frac_ulab") %>% mutate(frac_lab = 1 - exp(-ln_frac_ulab))),
-    nls_fit_curve = map2(data, nls_fit, ~data_grid(.x, hours = seq_range(hours, 20)) %>% 
-                           add_predictions(.y, var = "frac_lab"))
+test <- function(variable, bins=100) {
+  var_quo <- enquo(variable)
+  bind_rows(
+    svm_data_rates %>% mutate(ds="set1", label_rate = label_rate+0.1),
+    svm_data_rates %>% mutate(ds="set2")
   ) %>% 
-  ggplot() + 
-  aes(x = hours, y = frac_lab, color = protein, group = isopep) + 
-  geom_line(data = function(x) unnest(x, lm_fit_curve) %>% mutate(fit = "log-linear"), map = aes(linetype = fit)) +
-  geom_line(data = function(x) unnest(x, nls_fit_curve) %>% mutate(fit = "exponential"), map = aes(linetype = fit)) +
-  geom_point(data = function(x) unnest(x, data)) 
+    ggplot() + 
+    aes_q(x = var_quo, y = quo(..density..), 
+          fill = quo(ds), color = quo(ds)) + 
+    #geom_vline(xintercept = 0.066)+
+    geom_histogram(
+      bins = bins, color = "black", alpha = 0.5) +
+    geom_density(map = aes(fill = NULL), size = 2)+
+    labs(y = "probability [%]") + 
+    scale_y_continuous(expand = c(0,0)) +
+    theme_bw()
+}
+
+test(label_rate, bins = 10)
 ```
 
 
-```{r, fig.width = 8, fig.height=8}
-# residual standard error vs. chi-squared
-svm_models %>%
-  mutate(
-    # calculate chi-square assuming sigma = 0.05
-    chi_square = map_dbl(nls_fit, ~sum(residuals(.x)^2)/(0.05^2))
-  ) %>% 
-  # get sigma (residual standard error)
-  unnest(nls_summary) %>% 
-  ggplot() +
-  aes(x = chi_square, y = 100*sigma, color = factor(df.residual), group=isopep) +
-  geom_vline(xintercept = 3) +
-  geom_point() +
-  theme(legend.position = "none") +
-  labs(y = "residual standard error (% labelled)", x = "chi squared")
-ggplotly()
-```
 
 
 ```{r, fig.width = 8, fig.height=7}
 # plot estimates vs their residual standard error (+ the error of the estimate itself)
-svm_models %>%
-  unnest(nls_summary) %>% 
-  unnest(nls_coefficients) %>% 
+svm_data_rates %>%
   ggplot() +
-  aes(x = estimate, y = 100*sigma, color = protein, group=isopep) +
-  geom_errorbarh(map = aes(xmin = estimate - std.error, xmax = estimate + std.error)) +
+  aes(x = label_rate, y = 100*fit_rse, color = factor(num_datapoints)) +
+  geom_errorbarh(map = aes(xmin = label_rate - label_rate_se, xmax = label_rate + label_rate_se)) +
   geom_point() +
-  theme(legend.position = "none") + 
+  #theme(legend.position = "none") + 
   labs(y = "residual standard error (% labelled)", x = "d estimate")
 ggplotly()
 ```
@@ -169,6 +99,7 @@ ggplotly()
 Note: resid. SE would look different if tp=0 were not included in the fit (i.e. assuming tp 0 would always be 0% labeled and any measurements that indicates not 0 tp would not be relevant)
 
 ```{r fig.width = 10, fig.height=10}
+# we shoudl include something like this with the curves
 se_groups <- c(1, 2.5, 5, 7.5, 10, 15, 20, 25, 30)
 
 # plot data based on standard error to get a sense for cutoffs
