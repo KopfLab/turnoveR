@@ -65,7 +65,7 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
   }
 
   bad_data <-filter(data, enough_data == FALSE | nls_error == TRUE) %>%
-    select(!!!group_columns, num_isopep, nested_data, num_timepoints, num_datapoints, enough_data, nls_error)
+    select(!!!group_columns, num_isopep, nested_data, num_timepoints, num_datapoints, enough_data, fit_error = nls_error)
 
   good_data <- filter(data, enough_data == TRUE, nls_error == FALSE)
   if(nrow(good_data) > 0){
@@ -73,7 +73,7 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
       unnest(nls_summary, .drop = FALSE) %>%
       unnest(nls_coefficients, .drop = FALSE) %>%
       select(!!!group_columns, num_isopep, nested_data, label_rate = estimate, label_rate_se = std.error, fit_rse = sigma,
-             num_timepoints, num_datapoints, enough_data, nls_error)
+             num_timepoints, num_datapoints, enough_data, fit_error = nls_error)
     final_data <-bind_rows(good_data, bad_data)
   }else{
     final_data <- bad_data
@@ -96,8 +96,10 @@ calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0)
 data<- data %>%
     mutate(deg_rate = label_rate - growth_rate,
            deg_rate_se = sqrt(label_rate_se^2 + growth_rate_se^2),
-           dissipation_rate = deg_rate / label_rate,
-           dissipation_rate_se = dissipation_rate * sqrt((deg_rate_se/deg_rate)^2 + (growth_rate_se/growth_rate)^2)
+           dissipation = (deg_rate / label_rate)*100 ,
+           dissipation_se = abs(dissipation * sqrt((deg_rate_se/deg_rate)^2 + (growth_rate_se/growth_rate)^2))
            )
+
+return(data)
 
 }
