@@ -8,19 +8,12 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
   if (!is.data.frame(data)) {
     glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
   }
-  if (!"frac_lab" %in% names(data)){
-    glue("labeled fraction column 'frac_lab' does not exist in the dataset") %>% stop(call. = FALSE)
-  }
-  if (!"protein" %in% names(data)){
-    glue("protein column 'protein' does not exist in the dataset") %>% stop(call. = FALSE)
-  }
-  if (!"isopep" %in% names(data)){
-    glue("isopeptide column 'isopep' does not exist in the dataset") %>% stop(call. = FALSE)
-  }
-  if (!"hours" %in% names(data)){
-    glue("hours column 'hours' does not exist in the dataset") %>% stop(call. = FALSE)
-  }
 
+  columns <- c("frac_lab", "protein", "isopep", "hours")
+  missing <- setdiff(columns, names(data))
+  if (length(missing) > 0) {
+    glue("columns '{collapse(missing, sep = ', ', last = ' and ')}' do not exist in the dataset") %>% stop(call. = FALSE)
+  }
 
   # make sure to catch non-convergent NLS
   safe_nls <- safely(nls)
