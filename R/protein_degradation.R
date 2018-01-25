@@ -72,7 +72,8 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
     good_data <- good_data %>%
       unnest(nls_summary, .drop = FALSE) %>%
       unnest(nls_coefficients, .drop = FALSE) %>%
-      select(!!!group_columns, num_isopep, nested_data, label_rate = estimate, label_rate_se = std.error, fit_rse = sigma,
+      select(!!!group_columns, num_isopep, nested_data, label_rate = estimate,
+             label_rate_se = std.error, fit_rse = sigma, fit = nls_fit,
              num_timepoints, num_datapoints, enough_data, fit_error = nls_error)
     final_data <-bind_rows(good_data, bad_data)
   }else{
