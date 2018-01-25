@@ -18,14 +18,19 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
   # make sure to catch non-convergent NLS
   safe_nls <- safely(nls)
 
-  if(combine_peptides)
+  if(combine_peptides){
     data <-
       data %>%
-      nest(-protein, .key = "nested_data")
-  else
+      nest(-protein, .key = "nested_data") %>%
+      mutate(num_isopep = map_int(nested_data, ~length(unique(.x$isopep))))
+    group_columns = "protein"
+  }else{
     data<-
       data %>%
-      nest(-protein, -isopep, .key = "nested_data")
+      nest(-protein, -isopep, .key = "nested_data") %>%
+      mutate(num_isopep = 1)
+    group_columns = c("protein", "isopep")
+  }
 
   # information for user
   if (!quiet) {
@@ -58,7 +63,34 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
     glue("{nrow(filter(data, !nls_error))} of the {if(combine_peptides)'proteins' else 'peptides'} could be fit to a labeling curve.") %>%
       message()
   }
-  return(data)
+
+  bad_data <-filter(data, enough_data == FALSE | nls_error == TRUE) %>%
+    select(!!!group_columns, num_isopep, nested_data, num_timepoints, num_datapoints, enough_data, nls_error)
+
+  good_data <- filter(data, enough_data == TRUE, nls_error == FALSE)
+  if(nrow(good_data) > 0){
+    good_data <- good_data %>%
+      unnest(nls_summary, .drop = FALSE) %>%
+      unnest(nls_coefficients, .drop = FALSE) %>%
+      select(!!!group_columns, num_isopep, nested_data, label_rate = estimate, label_rate_se = std.error, fit_rse = sigma,
+             num_timepoints, num_datapoints, enough_data, nls_error)
+    final_data <-bind_rows(good_data, bad_data)
+  }else{
+    final_data <- bad_data
+  }
+
+
+
+
+
+
+
+
+  #keep/return value of parameter("d"), stderror, rse of overall fit, number timepoints, number datapoints
+  #also keep protein/isopep nested data for plotting
+  #keep enough_data and nls_error for failed proteins/isopeps
+
+  return(final_data)
 }
 
 

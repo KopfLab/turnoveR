@@ -10,5 +10,5 @@ calculate_label_rate(data, combine_peptides = TRUE, quiet = FALSE)
 \item{data}{the svm_data with fraclab/fraculab calculated \link{calculate_fraculab}}
 }
 \description{
-calculate protein or peptide labeling rate from svm_data
+calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
 }
