@@ -45,7 +45,7 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
     lm_coefficients = map(lm_fit, tidy),
     lm_summary = map(lm_fit, glance),
     # # use linear fit as a starting estimate for non-linear fit
-    nls_safe_fit = map2(nested_data, lm_coefficients, ~safe_nls(frac_lab ~ 1 - exp(-k_synth * hours), start = list(k_synth = .y$estimate), data = .x)),
+    nls_safe_fit = map2(filtered_data, lm_coefficients, ~safe_nls(frac_lab ~ 1 - exp(-k_synth * hours), start = list(k_synth = .y$estimate), data = .x)),
     nls_error = map_lgl(nls_safe_fit, ~!is.null(.x$error)),
     nls_fit = map2(nls_safe_fit, enough_data, ~if(.y){.x$result} else {NULL}),
     nls_coefficients = map(nls_fit, tidy),
