@@ -79,29 +79,25 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
     final_data <- bad_data
   }
 
-
-
-
-
-
-
-
-  #keep/return value of parameter("d"), stderror, rse of overall fit, number timepoints, number datapoints
-  #also keep protein/isopep nested data for plotting
-  #keep enough_data and nls_error for failed proteins/isopeps
-
   return(final_data)
 }
 
 
-#' Calculate degradation rate, chisquared value
-#' @description calculate kdeg and chisquared (Step 12a-c in workflow, previously performed in Igor)
-#' @param fraculab_data or fraculab_data_clean
-calc_pep_degrate <- function(fraculab_data_clean) {
+#' Calculate degradation rate,
+#' @description calculate kdeg (previously performed in Igor)
+#' @param data data with label rate calculated
+#' @param growth_rate growth rate from experiment
+#' @param growth_rate_se standard error of growth rate from experiment
+calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0) {
 
-  # fit each peptide to exponential equation y = Ae^dx (timepoint, frac_lab)
-  #extract d value for each peptide, store in new column
-  #calculate chisquared value, store in new column
+  #safetychecks
+  #need labeled rate column available ("make sure to run calc_label_rate")
 
-  # output example: return(deg_rate_data)
+data<- data %>%
+    mutate(deg_rate = label_rate - growth_rate,
+           deg_rate_se = sqrt(label_rate_se^2 + growth_rate_se^2),
+           dissipation_rate = deg_rate / label_rate,
+           dissipation_rate_se = dissipation_rate * sqrt((deg_rate_se/deg_rate)^2 + (growth_rate_se/growth_rate)^2)
+           )
+
 }
