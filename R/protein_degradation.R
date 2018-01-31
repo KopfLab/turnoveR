@@ -3,12 +3,13 @@
 #' @param data the svm_data with fraclab/fraculab calculated \link{calculate_fraculab}
 calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
 
-  # safety checks for data, specific variables
+  # safety checks for data
   if (missing(data)) stop("need to supply a data set", call. =FALSE)
   if (!is.data.frame(data)) {
     glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
   }
 
+  # safety checks for specific variables
   columns <- c("frac_lab", "protein", "isopep", "hours")
   missing <- setdiff(columns, names(data))
   if (length(missing) > 0) {
@@ -18,6 +19,7 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
   # make sure to catch non-convergent NLS
   safe_nls <- safely(nls)
 
+  #group peptides by protein if specified in function, nest data
   if(combine_peptides){
     data <-
       data %>%
@@ -91,8 +93,21 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
 #' @param growth_rate_se standard error of growth rate from experiment
 calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0) {
 
-  #safetychecks
-  #need labeled rate column available ("make sure to run calc_label_rate")
+  # safety checks for data
+  if (missing(data)) stop("need to supply a data set", call. =FALSE)
+  if (!is.data.frame(data)) {
+    glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
+  }
+  if (missing(growth_rate)) stop("need to supply experiment specific growth rate", call. =FALSE)
+
+
+  #safety check for required variables (need label rate, label reate error columns)
+  if (!label_rate %in% names(data)){
+    stop ("label rate column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
+  }
+  if (!label_rate_se %in% names(data)){
+    stop ("label rate error column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
+  }
 
 data<- data %>%
     mutate(deg_rate = label_rate - growth_rate,

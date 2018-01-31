@@ -61,20 +61,6 @@ test_that("filter_min_timepoints works", {
 
 
 
-#tests for "calc_pep_degrate" function
-# - test that input file is correct format
-# - test that exponential curve fits data(?)
-# - test that correct value is saved for deg rate & chisq
 
-#tests for "make_prot_master" function
-# - test that input file is correct format
-# - test that values are summed per proper column (protein)
-# - test that filtering of data based on number peptides was succesful
-# - test that filtering of data based on chisq value was succesful
-
-#tests for "calc_prot_dissipation" function
-# - test that input file is correct format
-# - test that kdegReal is calculated with correct inputs (kdegavg and growth rate)
-# - test that dissipation is calculated with correct inputs (kdegReal and growth rate)
 
 

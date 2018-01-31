@@ -53,9 +53,13 @@ svm_data_filtered <-
 
 ```{r}
 devtools::load_all()
-final_data <- calculate_label_rate(svm_data_filtered, quiet = TRUE) %>% 
+#turnovr function
+final_data <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>% 
+  #filter data to remove bad fits, curves with insuffucuent data
   filter(enough_data, !fit_error) %>% 
+  #remove columns with the error information
   select(-enough_data, -fit_error) %>% 
+  #turnovr function
   calculate_degrate_dissipation(0.066)
 ```
 
