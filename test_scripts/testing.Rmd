@@ -61,15 +61,19 @@ final_data <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>%
 
 
 ```{r, fig.width = 8, fig.height=7}
+# plot number 2 -> plot_label_rate_error
 # plot estimates vs their residual standard error (+ the error of the estimate itself)
-svm_data_rates %>%
+final_data %>%
   ggplot() +
-  aes(x = label_rate, y = 100*fit_rse, color = factor(num_datapoints)) +
+  aes(x = label_rate, y = fit_rse, label = protein) + #, color = factor(num_datapoints)) +
   geom_errorbarh(map = aes(xmin = label_rate - label_rate_se, xmax = label_rate + label_rate_se)) +
+  geom_vline(data = function(x) unique(x %>% select(growth_rate)),
+             mapping = aes(xintercept = growth_rate)) +
   geom_point() +
+  scale_y_continuous(labels = function(x) str_c(100*x)) +
+  #scale_color_gradient2(low = "blue", high = "red", mid = "green") +
   #theme(legend.position = "none") + 
-  labs(y = "residual standard error (% labelled)", x = "d estimate")
-ggplotly()
+  labs(y = "residual standard error of fit [% labelled]", x = "label rate [1/time]")
 ```
 
 # What do the different residual standard error ranges look like?
