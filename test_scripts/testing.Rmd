@@ -46,20 +46,16 @@ svm_data_filtered <-
   # adjust names (not a turnover function)
   select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_ulab, frac_lab) %>% 
   # turnover function
-  filter_min_timepoints(min_timepoint_present = 3) %>% 
+  #filter_min_timepoints(min_timepoint_present = 3) %>% 
   # add metatdata to get times for samples - should this be a turnover function?
   left_join(metadata, by = "sample")
 ```
 
 ```{r}
 devtools::load_all()
-#turnovr function
 final_data <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>% 
-  #filter data to remove bad fits, curves with insuffucuent data
   filter(enough_data, !fit_error) %>% 
-  #remove columns with the error information
   select(-enough_data, -fit_error) %>% 
-  #turnovr function
   calculate_degrate_dissipation(0.066)
 ```
 
@@ -70,8 +66,8 @@ final_data <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>%
 test <- function(variable, bins=100) {
   var_quo <- enquo(variable)
   bind_rows(
-    svm_data_rates %>% mutate(ds="set1", label_rate = label_rate+0.1),
-    svm_data_rates %>% mutate(ds="set2")
+    final_data %>% mutate(ds="set1", label_rate = label_rate+0.1),
+    final_data %>% mutate(ds="set2")
   ) %>% 
     ggplot() + 
     aes_q(x = var_quo, y = quo(..density..), 
@@ -85,7 +81,20 @@ test <- function(variable, bins=100) {
     theme_bw()
 }
 
-test(label_rate, bins = 10)
+test(dissipation, bins = 10)
+```
+
+
+```{r}
+# label rate histogram
+final_data %>% 
+  ggplot() + 
+  aes(x = label_rate) +
+  geom_vline(data = function(x) unique(x %>% select(growth_rate)), 
+             mapping = aes(xintercept = growth_rate)) +
+  geom_histogram(position = "dodge", bins = 80) 
+
+ggplot2::last_plot() %+% aes(fill = factor(growth_rate))
 ```
 
 
