@@ -10,11 +10,11 @@ test_that("Testing file quality", {
     hours = c(1, 0, 3))
 
   #test that input data file is correct format
-  expect_error(calculate_label_rate())
+  expect_error(calculate_label_rate(), "need .* data set")
   expect_error(calculate_label_rate(5), "wrong data type")
 
   #test that input data file is complete
-  expect_error(calculate_label_rate(mock_data %>% select(-hours)))
+  expect_error(calculate_label_rate(mock_data %>% select(-hours))) #add appropriate error messages
   expect_error(calculate_label_rate(mock_data %>% select(-protein)))
   expect_error(calculate_label_rate(mock_data %>% select(-isopep)))
   expect_error(calculate_label_rate(mock_data %>% select(-frac_lab)))
@@ -26,12 +26,13 @@ test_that("Testing file quality", {
     label_rate_se = c(0.0024814317, 0.0036241348, 0.0014125349))
 
   #test that input data file is correct format
-  expect_error(calculate_degrate_dissipation())
+  expect_error(calculate_degrate_dissipation(), "need .* data set")
   expect_error(calculate_degrate_dissipation(5), "wrong data type")
+  expect_error(calculate_degrate_dissipation(mock_data2), "need .* growth rate")
 
   #test that input data file is complete
-  expect_error(calculate_degrate_dissipation(mock_data %>% select(-label_rate)))
-  expect_error(calculate_degrate_dissipation(mock_data %>% select(-label_rate_se)))
+  expect_error(calculate_degrate_dissipation(mock_data2 %>% select(-label_rate), 0.066), ".* does not exist")
+  expect_error(calculate_degrate_dissipation(mock_data2 %>% select(-label_rate_se), 0.066), ".* does not exist")
 
 
 })

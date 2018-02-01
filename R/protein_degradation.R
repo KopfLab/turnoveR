@@ -102,11 +102,11 @@ calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0)
 
 
   #safety check for required variables (need label rate, label reate error columns)
-  if (!label_rate %in% names(data)){
-    stop ("label rate column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
+  if (!"label_rate" %in% names(data)){
+    stop ("Label rate column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
   }
-  if (!label_rate_se %in% names(data)){
-    stop ("label rate error column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
+  if (!"label_rate_se" %in% names(data)){
+    stop ("Label rate error column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
   }
 
 data<- data %>%
