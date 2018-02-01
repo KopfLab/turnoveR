@@ -60,46 +60,6 @@ final_data <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>%
 ```
 
 
-
-```{r}
-# plot histogram of estimates
-test <- function(variable, bins=100) {
-  var_quo <- enquo(variable)
-  bind_rows(
-    final_data %>% mutate(ds="set1", label_rate = label_rate+0.1),
-    final_data %>% mutate(ds="set2")
-  ) %>% 
-    ggplot() + 
-    aes_q(x = var_quo, y = quo(..density..), 
-          fill = quo(ds), color = quo(ds)) + 
-    #geom_vline(xintercept = 0.066)+
-    geom_histogram(
-      bins = bins, color = "black", alpha = 0.5) +
-    geom_density(map = aes(fill = NULL), size = 2)+
-    labs(y = "probability [%]") + 
-    scale_y_continuous(expand = c(0,0)) +
-    theme_bw()
-}
-
-test(dissipation, bins = 10)
-```
-
-
-```{r}
-# label rate histogram
-final_data %>% 
-  ggplot() + 
-  aes(x = label_rate) +
-  geom_vline(data = function(x) unique(x %>% select(growth_rate)), 
-             mapping = aes(xintercept = growth_rate)) +
-  geom_histogram(position = "dodge", bins = 80) 
-
-ggplot2::last_plot() %+% aes(fill = factor(growth_rate))
-```
-
-
-
-
 ```{r, fig.width = 8, fig.height=7}
 # plot estimates vs their residual standard error (+ the error of the estimate itself)
 svm_data_rates %>%
