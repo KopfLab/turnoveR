@@ -26,9 +26,10 @@ knitr::opts_knit$set(root.dir = "..")
 
 ```{r}
 devtools::load_all(".")
-filepath <- file.path("tests", "testthat", "test_data", "svm_pred_results.csv")
+filepath <- file.path("tests", "testthat", "test_data", "svm_pred_results_0.03gr.csv")
 svm_data <- read_svm_data_file(filepath)
-metadata <- read_excel(file.path("test_scripts", "metadata.xlsx"))
+metadata <- read_excel(file.path("test_scripts", "metadata_CMW.xlsx"))
+psms <- read_csv(file.path("tests", "testthat", "test_data", "psms.csv"))
 kable(metadata, d=2)
 ```
 
@@ -52,65 +53,36 @@ svm_data_filtered <-
 ```
 
 ```{r}
-devtools::load_all()
+growth_rate = 0.46*60 /894.4 
+generation_time = log(2) / growth_rate
 final_data <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>% 
   filter(enough_data, !fit_error) %>% 
   select(-enough_data, -fit_error) %>% 
-  calculate_degrate_dissipation(0.066)
+  calculate_degrate_dissipation(growth_rate)
 ```
 
 
-```{r, fig.width = 8, fig.height=7}
-# plot number 2 -> plot_label_rate_error
-# plot estimates vs their residual standard error (+ the error of the estimate itself)
-final_data %>% 
-  ggplot() +
-  aes(x = label_rate, y = fit_rse, label = protein) + #, color = factor(num_datapoints)) +
-  geom_errorbarh(map = aes(xmin = label_rate - label_rate_se, xmax = label_rate + label_rate_se)) +
-  geom_vline(data = function(x) unique(x %>% select(growth_rate)),
-             mapping = aes(xintercept = growth_rate)) +
-  geom_point() +
-  scale_y_continuous(labels = function(x) str_c(100*x)) +
-  #scale_color_gradient2(low = "blue", high = "red", mid = "green") +
-  #theme(legend.position = "none") + 
-  labs(y = "residual standard error of fit [% labelled]", x = "label rate [1/time]")
-```
 
 # What do the different residual standard error ranges look like?
 
 Note: resid. SE would look different if tp=0 were not included in the fit (i.e. assuming tp 0 would always be 0% labeled and any measurements that indicates not 0 tp would not be relevant)
+```{r}
+plot_label_rate_hist(final_data)
+plot_label_rate_error(final_data)
+plot_labeling_curves(final_data, plot_number = 20)
+```
 
 
 ```{r}
-# checks: nested_data, fit, growth_rate
-# check within unnested data: frac_lab, hours
-unnested_checks <- final_data$nested_data[[1]]
-
-
-plot_data <- final_data %>% 
-  head() %>% 
-  # introduce a unique row number to group lines together easily (no matter if it's proteins or peptides)
-  mutate(`#` = row_number()) %>% 
-  # calculate curves
+final_table <-final_data %>% 
+  left_join(psms, by = "protein") %>% 
   mutate(
-    curves = pmap(list(data = nested_data, label_rate = label_rate, growth_rate = growth_rate),
-                  function(data, label_rate, growth_rate) {
-                      data_frame(
-                       hours = seq(0, max(data$hours), length.out = 20),
-                       fit =  1 - exp(-label_rate * hours),
-                       expected = 1 - exp(-growth_rate * hours)
-                     ) %>% 
-                      gather(curve, frac_lab, -hours)
-                  })
-  )
+    relative_abundance =  (T0_counts / sum(T0_counts, na.rm = TRUE)),
+    weighted_deg = deg_rate * relative_abundance
+  ) %>% 
+  select(-nested_data, -fit)
 
-plot_data %>% 
-  ggplot() +
-  aes(x = hours, y = frac_lab, group = `#`) +
-  geom_point(data = function(x) unnest(x, nested_data)) +
-  geom_line(data = function(x) unnest(x, curves), mapping = aes(color = NULL, group = curve, linetype = curve)) +
-  aes(color = protein)+
-  facet_wrap(~protein)
+#filter data based on... no neg rates??
 ```
 
 

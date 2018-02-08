@@ -14,11 +14,10 @@ test_that("Testing file quality", {
   expect_error(calculate_label_rate(5), "wrong data type")
 
   #test that input data file is complete
-  expect_error(calculate_label_rate(mock_data %>% select(-hours))) #add appropriate error messages
-  expect_error(calculate_label_rate(mock_data %>% select(-protein)))
-  expect_error(calculate_label_rate(mock_data %>% select(-isopep)))
-  expect_error(calculate_label_rate(mock_data %>% select(-frac_lab)))
-
+  expect_error(calculate_label_rate(mock_data %>% select(-hours)), ".* does not exist") #add appropriate error messages
+  expect_error(calculate_label_rate(mock_data %>% select(-protein)), ".* does not exist")
+  expect_error(calculate_label_rate(mock_data %>% select(-isopep)), ".* does not exist")
+  expect_error(calculate_label_rate(mock_data %>% select(-frac_lab)), ".* does not exist")
 
   #mockdataframe2
   mock_data2 <- data_frame(

@@ -1,6 +1,7 @@
 #' Calculate protein or peptide labeling rate
 #' @description calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
 #' @param data the svm_data with fraclab/fraculab calculated \link{calculate_fraculab}
+#' @param max_label amount of maximum label on scale 0-1 (1 = 100% label)
 calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
 
   # safety checks for data
@@ -13,7 +14,7 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
   columns <- c("frac_lab", "protein", "isopep", "hours")
   missing <- setdiff(columns, names(data))
   if (length(missing) > 0) {
-    glue("columns '{collapse(missing, sep = ', ', last = ' and ')}' do not exist in the dataset") %>% stop(call. = FALSE)
+    glue("column '{collapse(missing, sep = ', ', last = ' and ')}' does not exist in the dataset") %>% stop(call. = FALSE)
   }
 
   # make sure to catch non-convergent NLS
@@ -112,7 +113,7 @@ calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0)
 data<- data %>%
     mutate(deg_rate = label_rate - growth_rate,
            deg_rate_se = sqrt(label_rate_se^2 + growth_rate_se^2),
-           dissipation = (deg_rate / label_rate)*100 ,
+           dissipation = (deg_rate / growth_rate)*100 , #label_rate or growth rate
            dissipation_se = abs(dissipation * sqrt((deg_rate_se/deg_rate)^2 + (growth_rate_se/growth_rate)^2)),
            growth_rate = growth_rate,
            growth_rate_se = growth_rate_se
