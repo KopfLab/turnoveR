@@ -52,6 +52,49 @@ svm_data_filtered <-
   left_join(metadata, by = "sample")
 ```
 
+
+```{r}
+# look for data matches
+svm_data_proteins_only <- svm_data_filtered %>% 
+  select(unishort, protein) %>% 
+  unique()
+
+# could match also by str_c(protein, "_ECOLI") with similar results
+svm_data_with_uniprot_info <- svm_data_proteins_only %>% 
+  left_join(prots, by = c("unishort" = "uniprot_id"))
+
+```
+
+```{r}
+sector_list <- read_csv(file.path( "test_scripts",  "Proteome_sectors_masterlist.csv"), 
+                        col_types =  cols(
+                           `Gene name` = col_character(),
+                           Sector = col_character())) %>% 
+  rename(gene = `Gene name`, sector = Sector)
+
+svm_data_with_sector_and_abundance <- 
+  svm_data_with_uniprot_info %>% 
+  # add sector
+  left_join(sector_list, by = "gene") %>% 
+  # add abundance
+  left_join(psms, by = "protein") 
+
+# could look at these more to find the ones without sector info
+# View(svm_data_with_sector_and_abundance %>% filter(is.na(sector)))
+
+# could look at these more to find the ones that were not in T0 dataset
+# View(svm_data_with_sector_and_abundance %>% filter(is.na(T0_counts)))
+
+svm_data_with_sector_and_abundance %>% 
+  group_by(sector) %>% 
+  summarize(tally_counts = sum(T0_counts, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(
+    percent = tally_counts/sum(tally_counts) * 100
+  )
+```
+
+
 ```{r}
 growth_rate = 0.46*60 /894.4 
 generation_time = log(2) / growth_rate
