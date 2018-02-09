@@ -1,23 +1,83 @@
+#' Fetch KEGG species
+#'
+#' @export
+fetch_kegg_species <- function() {
+  # user info
+  glue("Info: querying KEGG API for species list...") %>% message()
+  tbl_df(keggList("organism"))
+}
+
+#' Fetch all KEGG pathways for a species
+#'
+#' @param org_code KEGG organism code (typically 3-4 characters), if not provided, will be searched based on \code{species_name} using \link{fetch_kegg_species}
+#' @param species_name species name or regular expression to identify the organism of interest
+#' @export
+fetch_kegg_pathways_for_species <- function(org_code = find_by_species_name(), species_name = NULL) {
+
+  find_by_species_name <- function() {
+    if (is.null(species_name))
+      stop("species name is required to find organism code", call. = FALSE)
+    org <- fetch_kegg_species() %>% filter(str_detect(species, species_name))
+    if (nrow(org) == 0)
+      glue("could not identify species based on '{species_name}'") %>% stop(call. = FALSE)
+    else if (nrow(org) > 1)
+      glue("found more than one ({nrow(org)}) species that match '{species_name}'") %>% stop(call. = FALSE)
+    return(org$organism)
+  }
+
+  # user info
+  glue("Info: querying KEGG API for species' genes and pathways (this may take a few seconds)...") %>% message()
+
+  gene_pathways <-
+    keggLink("pathway", org_code) %>%
+    enframe("kegg_gene_id", "kegg_pathway_id")
+
+  pathways <- keggList("pathway", org_code) %>%
+    enframe("kegg_pathway_id", "pathway")
+
+  uniprot_to_kegg <- keggConv(org_code, "uniprot") %>%
+    enframe("uniprot_id", "kegg_gene_id") %>%
+    mutate(uniprot_id = str_replace(uniprot_id, "up:", ""))
+
+  species_name <- keggGet(gene_pathways$kegg_gene_id[1])[[1]]$ORGANISM[1]
+
+  glue("Info: found {nrow(pathways)} pathways, ",
+       "{length(unique(gene_pathways$kegg_gene_id))} genes, ",
+       "and {nrow(gene_pathways)} gene-pathway links ",
+       "for {species_name}") %>% message()
+
+  # combine data frames
+  pathways %>%
+    left_join(gene_pathways, by = "kegg_pathway_id") %>%
+    left_join(uniprot_to_kegg, by = "kegg_gene_id") %>%
+    select(uniprot_id, kegg_gene_id, kegg_pathway_id, pathway) %>%
+    arrange(kegg_gene_id) %>%
+    mutate(pathway = str_replace(pathway, str_c(" - ", species_name), ""))
+}
+
 #' Fetch KEGG pathway details
 #'
 #' @inheritParams fetch_kegg_details
+#' @export
 fetch_kegg_pathway_details <- function(kegg_db_entry) {
 
   # safety checks
-  if (missing(kegg_db_entry)) stop("no pathway kegg db entries provided", call. = FALSE)
+  if (missing(kegg_db_entry)) stop("no pathway KEGG API entries provided", call. = FALSE)
   if (!all(str_detect(kegg_db_entry, "^path:")))
-    stop("all pathway kegg db IDs must start with 'path:'", call. = FALSE)
+    stop("all pathway KEGG API IDs must start with 'path:'", call. = FALSE)
 
   info <- fetch_kegg_details(kegg_db_entry)
 
   # discard unneded (or confusing) columns if they exist
   discard_cols <- c("organism")
-  discard_cols <- intersect(discard_cols, names(pathway_details))
+  discard_cols <- intersect(discard_cols, names(info))
   if ( length(discard_cols) > 0)  {
     info[discard_cols] <- NULL
   }
 
-  return(info)
+  # arrange as makes most sense
+  info %>%
+    select(entry, ko_pathway, pathway_map, name, class, description, everything())
 }
 
 
@@ -28,16 +88,17 @@ fetch_kegg_pathway_details <- function(kegg_db_entry) {
 #'
 #' @param kegg_db_entry one or more (up to a maximum of 10) KEGG identifiers (see \link[KEGGREST]{keggGet})
 #' @param unnest_single_values whether to unnest single values (values that have a none or only a single entry for all retrieve records)
+#' @export
 fetch_kegg_details <- function(kegg_db_entry, unnest_single_values = TRUE, ...) {
   # safety checks
-  if (missing(kegg_db_entry)) stop("no kegg db entries provided", call. = FALSE)
+  if (missing(kegg_db_entry)) stop("no KEGG API entries provided", call. = FALSE)
 
   # user info
-  glue("Info: querying KEGG db for {length(kegg_db_entry)} entries ",
+  glue("Info: querying KEGG API for {length(kegg_db_entry)} entries ",
        "('{collapse(kegg_db_entry, sep=\"', '\")}')...") %>%
     message()
 
-  # query kegg db
+  # query KEGG API
   tryCatch(
     info <- keggGet(kegg_db_entry),
     error = function(e) {
