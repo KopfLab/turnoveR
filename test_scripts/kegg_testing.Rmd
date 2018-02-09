@@ -1,0 +1,123 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+
+```{r}
+library(KEGGREST)
+listDatabases()
+org <- keggList("organism") %>% tbl_df()
+org %>% filter(str_detect(species, "K-12"))
+# e.coli type strain: eco MG1655 is probably the best
+```
+
+```{r}
+enzymes <- keggList("enzyme") %>% tibble::enframe()
+```
+
+
+```{r}
+find_kegg_pathways_for_species <- function(species) {
+  
+  
+  org %>% filter(str_detect(species, "coli"))
+  
+}
+```
+
+```{r}
+
+devtools::load_all(".")
+data <- fetch_kegg_details(c("path:eco00010", "path:ko00010"))
+data
+```
+
+
+```{r}
+#' Fetch details for a kegg pathway
+#' 
+#' @param kegg_pathway_id one or multiple pathway IDs, the KEGG API limits equests to a maximum of 10 at a time, see \link[KEGGREST]{keggGet} for details. 
+fetch_kegg_pathway_details <- function(kegg_pathway_id) {
+  #info <- keggGet(c("path:eco00010", "path:eco00121"))
+  
+  # fetch pathway details
+  pathway_details <- 
+    data_frame(kegg_info = info) %>% 
+    mutate(
+      nr = row_number(),
+      name = map(kegg_info, names)
+    ) %>% unnest(name, .drop = FALSE) %>% 
+    mutate(
+      class = map2_chr(kegg_info, name, ~class(.x[[.y]])[1]),
+      length = map2_int(kegg_info, name, ~length(.x[[.y]])),
+      value = map2(kegg_info, name, ~.x[[.y]]),
+      name = str_to_lower(name)
+    ) %>%
+    select(nr, name, value) %>%
+    spread(name, value) 
+  
+  # discard unneded (or confusing) columns if they exist
+  discard_cols <- c("organism")
+  discard_cols <- intersect(discard_cols, names(pathway_details))
+  if ( length(discard_cols) > 0)  {
+    pathway_details[discard_cols] <- NULL
+  }
+  
+  # unnest single columns (if they exist)
+  unnest_cols <- c("entry", "ko_pathway", "name", "class", "pathway_map", "description")
+  unnest_cols <- intersect(unnest_cols, names(pathway_details))
+  pathway_details %>% 
+    # unnest all single columns
+    unnest(!!!syms(unnest_cols), .drop = FALSE)
+    
+  
+}
+
+fetch_kegg_pathway_details() %>% 
+  mutate(dblinks = map(dblinks, ~if(is.null(.x)) { character(0) } else { .x })) 
+```
+
+
+
+```{r}
+#query <- keggGet(c("hsa:10458", "ece:Z5100"), "image")
+query <- keggGet("ec:2.5.1.47")
+query[[1]]$PATHWAY
+```
+
+```{r}
+# kegg codes for e.coli genes
+uniprot_to_kegg <- keggConv("eco", "uniprot") %>% 
+  tibble::enframe("uniprot_id", "kegg_gene_id") %>% 
+  mutate(uniprot_id = str_replace(uniprot_id, "up:", ""))
+uniprot_to_kegg
+```
+
+```{r}
+# pathways for e. coli genes
+gene_pathways <- 
+  keggLink("pathway", "eco") %>% 
+  tibble::enframe("kegg_gene_id", "kegg_pathway_id")
+gene_pathways
+```
+
+```{r}
+pathways <- keggList("pathway", "eco") %>% 
+  tibble::enframe("kegg_pathway_id", "pathway") %>% 
+  mutate()
+```
+
+
+```{r}
+ec_pathways <- keggLink("pathway", "2.5.1.47")
+ec_pathways
+```
+
+
+
+
