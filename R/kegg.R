@@ -9,10 +9,10 @@ fetch_kegg_species <- function() {
 
 #' Fetch all KEGG pathways for a species
 #'
-#' @param org_code KEGG organism code (typically 3-4 characters), if not provided, will be searched based on \code{species_name} using \link{fetch_kegg_species}
+#' @param org_id KEGG organism code (typically 3-4 characters), if not provided, will be searched based on \code{species_name} using \link{fetch_kegg_species}
 #' @param species_name species name or regular expression to identify the organism of interest
 #' @export
-fetch_kegg_pathways_for_species <- function(org_code = find_by_species_name(), species_name = NULL) {
+fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(), species_name = NULL) {
 
   find_by_species_name <- function() {
     if (is.null(species_name))
@@ -29,13 +29,13 @@ fetch_kegg_pathways_for_species <- function(org_code = find_by_species_name(), s
   glue("Info: querying KEGG API for species' genes and pathways (this may take a few seconds)...") %>% message()
 
   gene_pathways <-
-    keggLink("pathway", org_code) %>%
+    keggLink("pathway", org_id) %>%
     enframe("kegg_gene_id", "kegg_pathway_id")
 
-  pathways <- keggList("pathway", org_code) %>%
+  pathways <- keggList("pathway", org_id) %>%
     enframe("kegg_pathway_id", "pathway")
 
-  uniprot_to_kegg <- keggConv(org_code, "uniprot") %>%
+  uniprot_to_kegg <- keggConv(org_id, "uniprot") %>%
     enframe("uniprot_id", "kegg_gene_id") %>%
     mutate(uniprot_id = str_replace(uniprot_id, "up:", ""))
 
@@ -52,21 +52,34 @@ fetch_kegg_pathways_for_species <- function(org_code = find_by_species_name(), s
     left_join(uniprot_to_kegg, by = "kegg_gene_id") %>%
     select(uniprot_id, kegg_gene_id, kegg_pathway_id, pathway) %>%
     arrange(kegg_gene_id) %>%
-    mutate(pathway = str_replace(pathway, str_c(" - ", species_name), ""))
+    mutate(
+      kegg_org_id = org_id,
+      kegg_pathway_id = str_replace(kegg_pathway_id, "path:", ""),
+      pathway = str_replace(pathway, str_c(" - ", species_name), "")
+    ) %>%
+    select(kegg_org_id, everything())
 }
 
 #' Fetch KEGG pathway details
 #'
-#' @inheritParams fetch_kegg_details
+#' Convenience wrapper to accept a pathways data frame and focus on the most relevant columns for pathways (uses \link{fetch_kegg_details} internally).
+#'
+#' @param pathways data frame with column kegg_pathway_id
 #' @export
-fetch_kegg_pathway_details <- function(kegg_db_entry) {
+fetch_kegg_pathway_details <- function(pathways) {
 
   # safety checks
-  if (missing(kegg_db_entry)) stop("no pathway KEGG API entries provided", call. = FALSE)
-  if (!all(str_detect(kegg_db_entry, "^path:")))
-    stop("all pathway KEGG API IDs must start with 'path:'", call. = FALSE)
+  if (missing(pathways) || !is.data.frame(pathways))
+    stop("no pathways data frame provided", call. = FALSE)
+  if (!"kegg_pathway_id" %in% names(pathways))
+    stop("pathways data frame does not have the required 'kegg_pathway_id' column", call. = FALSE)
+  if (!all(str_detect(pathways$kegg_pathway_id, "^[a-z]{2,}[0-9]{4,}")))
+    glue("all pathway KEGG IDs must have the pattern '<org><pathway>' ",
+         "where <org> is the lower-case organism code (e.g. 'eco' for E. coli) ",
+         "and <pathway> is the pathway id (e.g. '00020' for the TCA cycle)") %>%
+    stop(call. = FALSE)
 
-  info <- fetch_kegg_details(kegg_db_entry)
+  info <- fetch_kegg_details(pathways$kegg_pathway_id)
 
   # discard unneded (or confusing) columns if they exist
   discard_cols <- c("organism")
@@ -77,37 +90,56 @@ fetch_kegg_pathway_details <- function(kegg_db_entry) {
 
   # arrange as makes most sense
   info %>%
-    select(entry, ko_pathway, pathway_map, name, class, description, everything())
+    select(kegg_id, ko_pathway, pathway_map, name, class, description, everything())
 }
-
 
 #' Fetch KEGG details
 #'
 #' Helper function to convert output of \link[KEGGREST]{keggGet} to a nested data frame that is easy to work with in the tidyverse.
 #' To unnest individual nested columns and preserve others use the \code{.drop=FALSE} parameter in \link[tidyr]{unnest}
 #'
-#' @param kegg_db_entry one or more (up to a maximum of 10) KEGG identifiers (see \link[KEGGREST]{keggGet})
+#' @param kegg_id one or more KEGG identifiers. Can only do 10 requests at a time (see \link[KEGGREST]{keggGet}) so if there are more than 10, splits up into multiple queries.
 #' @param unnest_single_values whether to unnest single values (values that have a none or only a single entry for all retrieve records)
 #' @export
-fetch_kegg_details <- function(kegg_db_entry, unnest_single_values = TRUE, ...) {
+fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ...) {
   # safety checks
-  if (missing(kegg_db_entry)) stop("no KEGG API entries provided", call. = FALSE)
+  if (missing(kegg_id)) stop("no KEGG API entries provided", call. = FALSE)
+
 
   # user info
-  glue("Info: querying KEGG API for {length(kegg_db_entry)} entries ",
-       "('{collapse(kegg_db_entry, sep=\"', '\")}')...") %>%
+  kegg_id <- unique(kegg_id)
+  n_queries <- ceiling(length(kegg_id)/10)
+  glue("Info: querying KEGG API for {length(kegg_id)} unique KEGG entries (requires {n_queries} queries) ...") %>%
     message()
 
   # query KEGG API
-  tryCatch(
-    info <- keggGet(kegg_db_entry),
-    error = function(e) {
-      stop("KEGG API could not process the request: ", e$message, call. = FALSE)
-    })
+  query_results <-
+    data_frame(kegg_id = kegg_id) %>%
+    mutate(
+      n = row_number(),
+      request_group = as.integer(ceiling(n/10))
+    ) %>%
+    group_by(request_group) %>%
+    do({
+      entries <- .$kegg_id
+      info <- list()
+      tryCatch(
+        info <- keggGet(entries),
+        error = function(e) {
+          glue("KEGG API could not process the request for '{collapse(entries, sep = \"', '\")}' - skipping... ") %>%
+          warning(e$message, immediate. = TRUE, call. = FALSE)
+        })
+      data_frame(kegg_info = info)
+    }) %>%
+    ungroup(request_group)
+
+  # safety check
+  if (nrow(query_results) == 0)
+    stop("KEGG API queries did not return any results, cannot process further", call. = FALSE)
 
   # convert info into data frame format
   info_df <-
-    data_frame(kegg_info = info) %>%
+    query_results %>%
     mutate(
       nr = row_number(),
       name = map(kegg_info, names)
@@ -161,6 +193,9 @@ fetch_kegg_details <- function(kegg_db_entry, unnest_single_values = TRUE, ...) 
       select(!!!syms(unnest_cols), everything())
   }
 
+  # check for entry
+  if ("entry" %in% names(info_df_wide))
+    info_df_wide <- select(info_df_wide, kegg_id = entry, everything())
 
   # return data frame
   return(info_df_wide)
