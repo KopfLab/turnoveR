@@ -1,3 +1,111 @@
+# pathway functions ====
+
+#' Fetch KEGG pathway maps
+#'
+#' Downloads basic KEGG pathway maps
+#'
+#' @param pathways data frame with columns kegg_org_id and kegg_pathway_id
+#' @param download_folder which folder to download to (relative to working directory or absolute), will be created if it does not exist
+#' @param overwrite whether to overwrite existing files
+#' @param quiet parameter passed to \link[utils]{download.file}
+#' @param ... additional parameters passed on to \link[utils]{download.file}
+#' @return returns the unaltered pathways data frame
+#' @export
+fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", overwrite = FALSE, kgml = TRUE, species_png = TRUE, general_png = TRUE, quiet = TRUE, ...) {
+  # safety checks
+  if (missing(pathways) || !is.data.frame(pathways))
+    stop("no pathways data frame provided", call. = FALSE)
+  if (!"kegg_org_id" %in% names(pathways))
+    stop("pathways data frame does not have the required 'kegg_org_id' column", call. = FALSE)
+  if (!"kegg_pathway_id" %in% names(pathways))
+    stop("pathways data frame does not have the required 'kegg_pathway_id' column", call. = FALSE)
+  if (!dir.exists(download_folder)) dir.create(download_folder, recursive = TRUE)
+
+  # base url
+  png_pattern <- "http://www.genome.jp/kegg/pathway/%s/%s.png"
+  kgml_pattern <- "http://rest.kegg.jp/get/%s/kgml"
+
+  # download maps
+  urls <- pathways %>%
+    select(kegg_org_id, kegg_pathway_id) %>%
+    unique() %>%
+    mutate(
+      kgml_url = sprintf(kgml_pattern, kegg_pathway_id),
+      species_png_url = sprintf(png_pattern, kegg_org_id, kegg_pathway_id),
+      general_png_url = sprintf(png_pattern, "map", str_replace(kegg_pathway_id, kegg_org_id, "map"))
+    ) %>%
+    gather(type, url, ends_with("url")) %>%
+    # download everything only once (i.e. maps)
+    select(-kegg_org_id) %>%
+    unique() %>%
+    arrange(kegg_pathway_id) %>%
+    # filter depending on what is requested
+    filter(type != "kgml_url" | kgml,
+           type != "species_png_url" | species_png,
+           type != "general_png_url" | general_png) %>%
+    mutate(
+      path = file.path(download_folder,
+                       ifelse(type == "kgml_url",
+                              str_c(basename(dirname(url)),".xml"),
+                              basename(url))),
+      exists = file.exists(path)
+    )
+
+  # use info
+  glue("Info: requesting {nrow(urls)} files for {length(unique(urls$kegg_pathway_id))} pathways... ",
+       "{if (overwrite) 'overwriting' else 'skipping'} {sum(urls$exists)} existing files...") %>%
+    message()
+
+  # do download
+  urls <- urls %>% filter(overwrite | !exists)
+  if (nrow(urls) > 0) {
+    urls %>%
+    group_by(url, path) %>%
+    do({
+      download.file(unique(.$url), destfile = unique(.$path), quiet = quiet, ...)
+      data_frame()
+    })
+  }
+
+  return(urls)
+}
+
+
+#' Fetch KEGG pathway details
+#'
+#' Convenience wrapper to accept a pathways data frame and focus on the most relevant columns for pathways (uses \link{fetch_kegg_details} internally).
+#'
+#' @param pathways data frame with column kegg_pathway_id
+#' @export
+fetch_kegg_pathway_details <- function(pathways) {
+
+  # safety checks
+  if (missing(pathways) || !is.data.frame(pathways))
+    stop("no pathways data frame provided", call. = FALSE)
+  if (!"kegg_pathway_id" %in% names(pathways))
+    stop("pathways data frame does not have the required 'kegg_pathway_id' column", call. = FALSE)
+  if (!all(str_detect(pathways$kegg_pathway_id, "^[a-z]{2,}[0-9]{4,}")))
+    glue("all pathway KEGG IDs must have the pattern '<org><pathway>' ",
+         "where <org> is the lower-case organism code (e.g. 'eco' for E. coli) ",
+         "and <pathway> is the pathway id (e.g. '00020' for the TCA cycle)") %>%
+    stop(call. = FALSE)
+
+  info <- fetch_kegg_details(pathways$kegg_pathway_id)
+
+  # discard unneded (or confusing) columns if they exist
+  discard_cols <- c("organism")
+  discard_cols <- intersect(discard_cols, names(info))
+  if ( length(discard_cols) > 0)  {
+    info[discard_cols] <- NULL
+  }
+
+  # arrange as makes most sense
+  info %>%
+    select(kegg_id, ko_pathway, pathway_map, name, class, description, everything())
+}
+
+# species functions ====
+
 #' Fetch KEGG species
 #'
 #' @export
@@ -60,38 +168,7 @@ fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(), spe
     select(kegg_org_id, everything())
 }
 
-#' Fetch KEGG pathway details
-#'
-#' Convenience wrapper to accept a pathways data frame and focus on the most relevant columns for pathways (uses \link{fetch_kegg_details} internally).
-#'
-#' @param pathways data frame with column kegg_pathway_id
-#' @export
-fetch_kegg_pathway_details <- function(pathways) {
-
-  # safety checks
-  if (missing(pathways) || !is.data.frame(pathways))
-    stop("no pathways data frame provided", call. = FALSE)
-  if (!"kegg_pathway_id" %in% names(pathways))
-    stop("pathways data frame does not have the required 'kegg_pathway_id' column", call. = FALSE)
-  if (!all(str_detect(pathways$kegg_pathway_id, "^[a-z]{2,}[0-9]{4,}")))
-    glue("all pathway KEGG IDs must have the pattern '<org><pathway>' ",
-         "where <org> is the lower-case organism code (e.g. 'eco' for E. coli) ",
-         "and <pathway> is the pathway id (e.g. '00020' for the TCA cycle)") %>%
-    stop(call. = FALSE)
-
-  info <- fetch_kegg_details(pathways$kegg_pathway_id)
-
-  # discard unneded (or confusing) columns if they exist
-  discard_cols <- c("organism")
-  discard_cols <- intersect(discard_cols, names(info))
-  if ( length(discard_cols) > 0)  {
-    info[discard_cols] <- NULL
-  }
-
-  # arrange as makes most sense
-  info %>%
-    select(kegg_id, ko_pathway, pathway_map, name, class, description, everything())
-}
+# general functions =====
 
 #' Fetch KEGG details
 #'

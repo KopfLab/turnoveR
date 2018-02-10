@@ -5,7 +5,7 @@
 #' @importFrom readr read_csv cols_only col_character col_double
 #' @importFrom readxl read_excel
 #' @importFrom tibble enframe
-#' @importFrom dplyr as_data_frame tbl_df %>% filter mutate data_frame left_join select rename bind_rows arrange group_by ungroup do everything summarize
+#' @importFrom dplyr as_data_frame tbl_df %>% filter mutate data_frame left_join select rename bind_rows arrange group_by ungroup do everything starts_with ends_with summarize
 #' @importFrom glue glue collapse
 #' @importFrom stringr str_c str_detect str_replace str_to_lower
 #' @importFrom purrr safely map map2 map_lgl map_dbl map_int map2_int map_chr map2_chr

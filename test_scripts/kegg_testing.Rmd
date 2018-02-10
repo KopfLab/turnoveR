@@ -38,6 +38,8 @@ details <-
   pathways %>% 
   # focus on those that concern biosynthesis
   filter(str_detect(pathway, "biosynthesis")) %>% 
+  # download pathway images and kgml files into kegg folder
+  fetch_kegg_pathway_maps() %>% 
   # fetch pathway details
   fetch_kegg_pathway_details()
 details
@@ -50,9 +52,15 @@ details %>% unnest(compound) %>%
    select(kegg_id, compound, pathway_map)
 ```
 
-# Graphing
+
+# Experimental KEGGgrpah
 
 ```{r}
+# how to modify this easily? to highlight the releavant genes online
+# to make something like this http://www.genome.jp/tmp/search_pathway151821866943091/hsa05200_color_pathway_css3d.html
+# from http://www.genome.jp/kegg/tool/map_pathway3.html (numerical values option)
+# that would be ideal
+
 url <- mark.pathway.by.objects("path:eco00260",
                        c("eco:b0002", "eco:c00263"))
         # if(interactive()){
@@ -67,23 +75,22 @@ url <- color.pathway.by.objects("path:eco00260",
 ```
 
 
-# Experimental KEGGgrpah
-
 ```{r}
 library(KEGGgraph)
 ```
 
 
 ```{r}
-maps_folder <- file.path("test_scripts", "kegg")
-getKGMLurl("00020", organism = "eco")
-retrieveKGML("00020", organism = "eco", destfile = file.path(maps_folder, "eco00020.xml"), method = "internal")
-retrieveKGML("04110", organism = "hsa", destfile = file.path(maps_folder, "hsa04110.xml"), method = "internal")
-retrieveKGML("00020", organism = "hsa", destfile = file.path(maps_folder, "hsa00020.xml"), method = "internal")
+# the following is unnecssary with our new fetch_kegg_pathway_maps() function
+#getKGMLurl("00020", organism = "eco")
+#retrieveKGML("00020", organism = "eco", destfile = file.path(maps_folder, "eco00020.xml"), method = "internal")
+#retrieveKGML("04110", organism = "hsa", destfile = file.path(maps_folder, "hsa04110.xml"), method = "internal")
+#retrieveKGML("00020", organism = "hsa", destfile = file.path(maps_folder, "hsa00020.xml"), method = "internal")
 ```
 
 
 ```{r}
+maps_folder <- file.path("kegg")
 kgml_map <- parseKGML(file.path(maps_folder, "eco00020.xml"))
 kgml_map_graph <- parseKGML2Graph(tmp, expandGenes=TRUE)
 kgml_map
