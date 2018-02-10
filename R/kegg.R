@@ -67,7 +67,7 @@ fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", overwrit
     })
   }
 
-  return(urls)
+  return(pathways)
 }
 
 

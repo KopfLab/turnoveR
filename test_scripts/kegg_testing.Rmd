@@ -10,6 +10,7 @@ output:
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(turnoveR)
+knitr::opts_knit$set(root.dir = "..") 
 ```
 
 ## Species
@@ -53,9 +54,11 @@ details %>% unnest(compound) %>%
 ```
 
 
-# Experimental KEGGgrpah
+# Experimental: KEGGgrpah
 
-```{r}
+Download is clusmy but now that we have fetch_kegg_pathway_maps() this looks promising for manipulating KEGG graphs... although maybe better to just work with the KEGG image API itself? If we can figure out how to POST parameters to the highlight genes and plot parameters over the 3D graph.
+
+```{r, eval=FALSE, include=FALSE}
 # how to modify this easily? to highlight the releavant genes online
 # to make something like this http://www.genome.jp/tmp/search_pathway151821866943091/hsa05200_color_pathway_css3d.html
 # from http://www.genome.jp/kegg/tool/map_pathway3.html (numerical values option)
@@ -75,12 +78,7 @@ url <- color.pathway.by.objects("path:eco00260",
 ```
 
 
-```{r}
-library(KEGGgraph)
-```
-
-
-```{r}
+```{r, eval=FALSE, include=FALSE}
 # the following is unnecssary with our new fetch_kegg_pathway_maps() function
 #getKGMLurl("00020", organism = "eco")
 #retrieveKGML("00020", organism = "eco", destfile = file.path(maps_folder, "eco00020.xml"), method = "internal")
@@ -89,7 +87,8 @@ library(KEGGgraph)
 ```
 
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
+library(KEGGgraph)
 maps_folder <- file.path("kegg")
 kgml_map <- parseKGML(file.path(maps_folder, "eco00020.xml"))
 kgml_map_graph <- parseKGML2Graph(tmp, expandGenes=TRUE)
@@ -99,11 +98,11 @@ kgml_map_graph
 
 
 
-# Experiment KEGGprofile
+# Experiment: KEGGprofile
 
 Note: it seems this package just draws over the PNGs of the pathways...not really what I was hoping for.
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 # download every single relevant pathway map (this takes minutes)
 library(KEGGprofile)
 download_KEGGfile(pathway_id=pathways$kegg_pathway_id %>% str_replace("path:eco", "") %>% unique(),
@@ -111,18 +110,18 @@ download_KEGGfile(pathway_id=pathways$kegg_pathway_id %>% str_replace("path:eco"
 download_KEGGfile(pathway_id = "00020", species = "eco", target_dir = maps_folder)
 ```
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 # xml file
 parse_XMLfile("00020", species = "eco", database_dir = maps_folder)
 parse_XMLfile("04110", species = "hsa", database_dir = system.file("extdata", package = "KEGGprofile"))
 ```
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 XML::xmlTreeParse(file.path("test_scripts", "kegg", "eco00051.xml"))
 ```
 
 
-```{r}
+```{r, eval=FALSE, include=FALSE}
 data(pro_pho_expr)
 data(pho_sites_count)
 #type='lines'
