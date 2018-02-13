@@ -16,7 +16,9 @@ Imports:
   readxl,
   glue, 
   purrr, 
-  broom
+  SPARQL,
+  broom, 
+  RCurl
 Suggests:
   testthat,
   knitr,
