@@ -113,8 +113,8 @@ calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0)
 data<- data %>%
     mutate(deg_rate = label_rate - growth_rate,
            deg_rate_se = sqrt(label_rate_se^2 + growth_rate_se^2),
-           dissipation = (deg_rate / growth_rate)*100 , #label_rate or growth rate
-           dissipation_se = abs(dissipation * sqrt((deg_rate_se/deg_rate)^2 + (growth_rate_se/growth_rate)^2)),
+           dissipation = (deg_rate / label_rate)*100 , #label_rate or growth rate
+           dissipation_se = abs(dissipation * sqrt((deg_rate_se/deg_rate)^2 + (label_rate_se/label_rate)^2)),
            growth_rate = growth_rate,
            growth_rate_se = growth_rate_se
            )

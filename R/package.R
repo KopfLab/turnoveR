@@ -2,7 +2,7 @@
 "_PACKAGE"
 
 #' @importFrom rlang !! !!! sym syms
-#' @importFrom readr read_csv cols_only col_character col_double
+#' @importFrom readr read_csv cols_only col_character col_double read_rds write_rds
 #' @importFrom readxl read_excel
 #' @importFrom tibble enframe
 #' @importFrom dplyr as_data_frame tbl_df %>% filter mutate data_frame left_join select rename bind_rows arrange group_by ungroup do everything starts_with ends_with summarize
@@ -12,4 +12,6 @@
 #' @importFrom tidyr nest unnest spread gather
 #' @importFrom broom tidy glance
 #' @importFrom KEGGREST keggGet keggConv keggLink keggList
+#' @import SPARQL
+#' @import RCurl
 NULL

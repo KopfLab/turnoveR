@@ -18,8 +18,10 @@ Imports:
   readxl,
   glue, 
   purrr, 
-  broom,
-  KEGGREST
+  KEGGREST,
+  SPARQL,
+  broom, 
+  RCurl
 Suggests:
   testthat,
   knitr,
