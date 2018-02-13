@@ -27,13 +27,13 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
       data %>%
       nest(-protein, -gene, .key = "nested_data") %>%
       mutate(num_isopep = map_int(nested_data, ~length(unique(.x$isopep))))
-    group_columns = "protein"
+    group_columns = c("protein", "gene")
   }else{
     data<-
       data %>%
       nest(-protein, -isopep, -gene, .key = "nested_data") %>%
       mutate(num_isopep = 1)
-    group_columns = c("protein", "isopep")
+    group_columns = c("protein", "isopep", "gene")
   }
 
   # information for user
