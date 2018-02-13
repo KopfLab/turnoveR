@@ -1,0 +1,221 @@
+---
+title: "Untitled"
+output: 
+  html_document:
+    df: paged
+---
+
+# KEGG examples
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(turnoveR)
+knitr::opts_knit$set(root.dir = "..") 
+```
+
+## Species
+
+```{r}
+# available species
+species <- fetch_kegg_species()
+species
+filter(species, str_detect(species, "K-12"))
+```
+
+
+## Pathways
+
+```{r}
+# pathways for species
+pathways <- fetch_kegg_pathways_for_species(org_id = "eco")
+pathways
+```
+
+## Pathway Details
+
+```{r}
+# additional information for pathways
+details <- 
+  pathways %>% 
+  # focus on those that concern biosynthesis
+  filter(str_detect(pathway, "biosynthesis")) %>% 
+  # download pathway images and kgml files into kegg folder
+  fetch_kegg_pathway_maps() %>% 
+  # fetch pathway details
+  fetch_kegg_pathway_details()
+details
+
+# loadsd of information in this data frame, e.g. descriptions
+details %>% select(description)
+
+# or compounds involved
+details %>% unnest(compound) %>% 
+   select(kegg_id, compound, pathway_map)
+```
+
+
+# Experimental: KEGGgrpah
+
+Download is clusmy but now that we have fetch_kegg_pathway_maps() this looks promising for manipulating KEGG graphs... although maybe better to just work with the KEGG image API itself? If we can figure out how to POST parameters to the highlight genes and plot parameters over the 3D graph.
+
+```{r, eval=FALSE, include=FALSE}
+# how to modify this easily? to highlight the releavant genes online
+# to make something like this http://www.genome.jp/tmp/search_pathway151821866943091/hsa05200_color_pathway_css3d.html
+# from http://www.genome.jp/kegg/tool/map_pathway3.html (numerical values option)
+# that would be ideal
+
+url <- mark.pathway.by.objects("path:eco00260",
+                       c("eco:b0002", "eco:c00263"))
+        # if(interactive()){
+        #     browseURL(url)
+        # }
+
+# this doesn't actually work properly
+url <- color.pathway.by.objects("path:eco00260",
+                       c("eco:b0002", "eco:c00263"),
+                       c("#ff0000", "#00ff00"), c("#ffff00", "yellow"))
+ 
+```
+
+
+```{r, eval=FALSE, include=FALSE}
+# the following is unnecssary with our new fetch_kegg_pathway_maps() function
+#getKGMLurl("00020", organism = "eco")
+#retrieveKGML("00020", organism = "eco", destfile = file.path(maps_folder, "eco00020.xml"), method = "internal")
+#retrieveKGML("04110", organism = "hsa", destfile = file.path(maps_folder, "hsa04110.xml"), method = "internal")
+#retrieveKGML("00020", organism = "hsa", destfile = file.path(maps_folder, "hsa00020.xml"), method = "internal")
+```
+
+
+```{r, eval=FALSE, include=FALSE}
+library(KEGGgraph)
+maps_folder <- file.path("kegg")
+kgml_map <- parseKGML(file.path(maps_folder, "eco00020.xml"))
+kgml_map_graph <- parseKGML2Graph(tmp, expandGenes=TRUE)
+kgml_map
+kgml_map_graph
+```
+
+
+
+# Experiment: KEGGprofile
+
+Note: it seems this package just draws over the PNGs of the pathways...not really what I was hoping for.
+
+```{r, eval=FALSE, include=FALSE}
+# download every single relevant pathway map (this takes minutes)
+library(KEGGprofile)
+download_KEGGfile(pathway_id=pathways$kegg_pathway_id %>% str_replace("path:eco", "") %>% unique(),
+                  species='eco', target_dir = maps_folder)
+download_KEGGfile(pathway_id = "00020", species = "eco", target_dir = maps_folder)
+```
+
+```{r, eval=FALSE, include=FALSE}
+# xml file
+parse_XMLfile("00020", species = "eco", database_dir = maps_folder)
+parse_XMLfile("04110", species = "hsa", database_dir = system.file("extdata", package = "KEGGprofile"))
+```
+
+```{r, eval=FALSE, include=FALSE}
+XML::xmlTreeParse(file.path("test_scripts", "kegg", "eco00051.xml"))
+```
+
+
+```{r, eval=FALSE, include=FALSE}
+data(pro_pho_expr)
+data(pho_sites_count)
+#type='lines'
+col <-
+  col_by_value(pho_sites_count,
+               col = colorRampPalette(c('white', 'khaki2'))(4),
+               breaks = c(0, 1, 4, 10, Inf))
+temp <-
+  plot_pathway(
+    pro_pho_expr,
+    bg_col = col,
+    line_col = c("brown1", "seagreen3"),
+    groups = c(rep("Proteome ", 6),
+               rep("Phosphoproteome ", 6)),
+    magnify = 1.2,
+    species = 'hsa',
+    database_dir = maps_folder,
+    pathway_id = "04110",
+    max_dist = 5
+  )
+#type='bg'
+pho_expr <- pro_pho_expr[, 7:12]
+temp <- apply(pho_expr, 1, function(x)
+  length(which(is.na(x))))
+pho_expr <- pho_expr[which(temp == 0), ]
+col <-
+  col_by_value(pho_expr, col = colorRampPalette(c('green', 'black', 'red'))(1024), range =
+                 c(-6, 6))
+temp <-
+  plot_pathway(
+    pho_expr,
+    type = "bg",
+    bg_col = col,
+    text_col = "white",
+    magnify = 1.2,
+    species = 'hsa',
+    database_dir =  maps_folder,
+    pathway_id = "04110"
+  )
+#Compound and gene data
+set.seed(124)
+testData1 <-
+  rbind(rnorm(6),
+        rnorm(6),
+        rnorm(6),
+        rnorm(6),
+        rnorm(6),
+        rnorm(6),
+        rnorm(6),
+        rnorm(6))
+row.names(testData1) <-
+  c("4967",
+    "55753",
+    "1743",
+    "8802",
+    "47",
+    "50",
+    "cpd:C15972",
+    "cpd:C16255")
+colnames(testData1) <-
+  c("Control0",
+    "Control2",
+    "Control5",
+    "Sample0",
+    "Sample2",
+    "Sample5")
+temp <-
+  plot_pathway(
+    testData1,
+    type = "lines",
+    line_col = c("brown1", "seagreen3"),
+    groups = c(rep("Control", 3), rep("Sample", 3)),
+    magnify = 1.2,
+    species = 'hsa',
+    database_dir =  maps_folder,
+    pathway_id = "00020",
+    max_dist = 2
+  )
+testData2 <- testData1[, 4:6] - testData1[, 1:3]
+col <-
+  col_by_value(testData2, col = colorRampPalette(c('green', 'black', 'red'))(1024), range =
+                 c(-2, 2))
+temp <-
+  plot_pathway(
+    testData2,
+    type = "bg",
+    bg_col = col,
+    text_col = "white",
+    magnify = 1.2,
+    species = 'hsa',
+    database_dir = system.file("extdata", package = "KEGGprofile"),
+    pathway_id = "00020"
+  )
+
+```
+
+

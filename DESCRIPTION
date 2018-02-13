@@ -11,11 +11,14 @@ Imports:
   methods,
   rlang,
   tidyr,
+  tibble,
   dplyr (>= 0.7.0),
+  stringr,
   readr,
   readxl,
   glue, 
   purrr, 
+  KEGGREST,
   SPARQL,
   broom, 
   RCurl
@@ -23,6 +26,7 @@ Suggests:
   testthat,
   knitr,
   rmarkdown
+biocViews: 
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true

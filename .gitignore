@@ -40,4 +40,5 @@ vignettes/*.pdf
 # don't include knitted files
 *.html
 *.pdf
-
+*.png
+*.xml
