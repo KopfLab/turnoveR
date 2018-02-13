@@ -40,6 +40,7 @@ test_that("Testing protein labeling rate", {
 
   test_data <- data_frame(
     protein = c("6PGD", "7ABC", "6PGD"),
+    gene = c("6PGD1", "7ABC2", "6PGD3"),
     isopep = c("VLSGPQAQPAGDK", "LLSGPRD", "YAGHMPQFHSLY"),
     frac_lab = c(.5, .6, .5),
     hours = c(1, 0, 3))

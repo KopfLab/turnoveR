@@ -10,8 +10,9 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
     glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
   }
 
+
   # safety checks for specific variables
-  columns <- c("frac_lab", "protein", "isopep", "hours")
+  columns <- c("frac_lab", "protein", "isopep", "hours", "gene")
   missing <- setdiff(columns, names(data))
   if (length(missing) > 0) {
     glue("column '{collapse(missing, sep = ', ', last = ' and ')}' does not exist in the dataset") %>% stop(call. = FALSE)
@@ -24,13 +25,13 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
   if(combine_peptides){
     data <-
       data %>%
-      nest(-protein, .key = "nested_data") %>%
+      nest(-protein, -gene, .key = "nested_data") %>%
       mutate(num_isopep = map_int(nested_data, ~length(unique(.x$isopep))))
     group_columns = "protein"
   }else{
     data<-
       data %>%
-      nest(-protein, -isopep, .key = "nested_data") %>%
+      nest(-protein, -isopep, -gene, .key = "nested_data") %>%
       mutate(num_isopep = 1)
     group_columns = c("protein", "isopep")
   }
