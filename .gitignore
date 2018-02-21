@@ -37,3 +37,8 @@ vignettes/*.pdf
 .DS_Store
 ~$*
 
+# don't include knitted files
+*.html
+*.pdf
+*.png
+*.xml

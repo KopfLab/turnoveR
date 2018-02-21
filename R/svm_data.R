@@ -1,3 +1,5 @@
+# finished --
+
 #' Read SVM data file
 #' @description This functions reads the data file
 #' @param filepath the path to the svm data file
@@ -6,7 +8,7 @@
 read_svm_data_file <- function(filepath) {
 
   if(!file.exists(filepath)) {
-    glue("This svm file does not seem to exist '{filepath}'") %>%
+    glue("This svm file does not seem to exist '{filepath}' in the current working directory") %>%
     stop(call. = FALSE)
   }
 
@@ -33,11 +35,13 @@ read_svm_data_file <- function(filepath) {
 }
 
 
+# finished but will have to work with filtering criteria other than pred_cutoff (once we determine which filter criteria are actually most useful)
+
 #' Process the SVM data
-#' @description bla
+#' @description process and filter data (Step 10 in current workflow)
 #' @param svm_data the SVM data
 #' @param pred_cutoff the probability cutoff from the svm prediction
-process_svm_data <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
+filter_peptides_by_spectral_fit <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
 
   if (missing(svm_data)) stop("need to supply the svm data frame", call. =FALSE)
   if (!is.data.frame(svm_data)) {
@@ -52,11 +56,187 @@ process_svm_data <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
   # information for user
   if (!quiet) {
     n_original <- nrow(svm_data)
-    n_discarded <- nrow(svm_data) - nrow(filtered_data)
-    glue("Info: discarded {n_discarded} of {n_original} ({round(n_discarded/n_original*100, 1)}%) rows") %>%
+    n_kept <- nrow(filtered_data)
+    glue("Info: kept {n_kept} of {n_original} ({round(n_kept/n_original*100, 1)}%) peptide measurements") %>%
       message()
   }
 
   return(filtered_data)
 }
 
+
+# -- finished
+
+#' @param data the data set
+#' @param renaming_protein_map_file the filepath to the xlsx mapping file
+#' @param prot_col the name of the column that has the protein ID/name
+rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", prot_new_col = "protNew", quiet = FALSE) {
+
+  # safety checks for data
+  if (missing(data)) stop("need to supply a data set", call. =FALSE)
+  if (!is.data.frame(data)) {
+    glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
+  }
+  if (!prot_col %in% names(data)){
+    glue("protein ID column '{prot_col}' does not exist in the dataset") %>% stop(call. = FALSE)
+  }
+
+  # safety checks for renaming
+  if (missing(renaming_protein_map_file)) {
+    stop("parameter 'renaming_protein_map_file' (the path to the mapping text file) is required", call. =FALSE)
+  }
+  if (!file.exists(renaming_protein_map_file))  {
+    glue("Mapping text file '{renaming_protein_map_file}' does not exist. Please check that the path is correct.") %>% stop(call. = FALSE)
+  }
+
+  mapping_file <- read_excel(renaming_protein_map_file)
+  if (!prot_col %in% names(mapping_file)){
+    glue("protein ID column '{prot_col}' does not exist in the mapping file") %>% stop(call. = FALSE)
+  }
+  if (!prot_new_col %in% names(mapping_file)){
+    glue("protein new ID column '{prot_new_col}' does not exist in the mapping file") %>% stop(call. = FALSE)
+  }
+
+  # do the mapping
+  combined_data <-
+    left_join(data, mapping_file, by = prot_col)
+
+  # information for user
+  if (!quiet) {
+    #how_many_renamed <- sum(!is.na(combined_data[[prot_new_col]]))
+    how_many_renamed <- combined_data[[prot_new_col]] %>% { !is.na(.) } %>% sum()
+    how_many_unique <- combined_data[[prot_new_col]] %>% unique() %>% { !is.na(.) } %>% sum()
+    glue("Info: renamed {how_many_renamed} protein entries for {how_many_unique} different proteins.") %>%
+      message()
+  }
+
+  # because we have variable names for the columns, need to use quoted expressions (_qs)
+  prot_col_q <- as.name(prot_col)
+  prot_new_col_q <- as.name(prot_new_col)
+  combined_data %>%
+    mutate(!!prot_col_q := ifelse(!is.na(!!prot_new_col_q), !!prot_new_col_q, !!prot_col_q)) %>%
+    select(-!!prot_new_col_q) %>%
+    return()
+
+}
+
+
+# finished -- maybe change name to something calculate_labeled_fraction?
+# add option for columns being differently names (ampU, amplL)
+
+#' Calculate labeled fraction 1
+#' @description Calculate fraclab, add to metadata(replace excel step 11)
+#' @param  filtered_data the filtered svm data
+#' @export
+calculate_fraculab <- function(data) {
+
+  #checking whether data file was supplied, and in correct format
+  if (missing(data)) stop("need to supply the data frame", call. =FALSE)
+  if (!is.data.frame(data)) {
+    glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
+  }
+
+  # adding columns for unlabeled and labeled fraction.
+  data <- data %>%
+    mutate(
+      #create new columns frac_ulab and frac_lab using ampU and ampL values from filtered dataset
+      frac_ulab = ampU / (ampU + ampL),
+      frac_lab = 1 - frac_ulab)
+
+
+  return(data)
+
+}
+
+# finished -- except for maybe a few more checks AND allow for overwriting default column names
+
+#' Filter data based on number of timepoints where the peptide is identified
+#' @description (Step 11 in workflow)
+#' @param  data the data to be filtered
+#' @param min number of timepoints present
+filter_min_timepoints <-function(data, min_timepoint_present = 3, quiet = FALSE) {
+    #checking whether data file was supplied, and in correct format
+    if (missing(data))
+      stop("need to supply the data frame", call. = FALSE)
+    if (!is.data.frame(data)) {
+      glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
+    }
+
+    # @TODO: maybe add safety checks that the expected columns are present: protein, isopep, etc.
+
+    filtered_data <- data %>%
+      group_by(protein, isopep) %>%
+      # calculate the number of time points where the peptide is identified
+      mutate(n_time_points_identified = n()) %>% ungroup() %>%
+      # filter out the ones that are not present in enough time points
+      filter(n_time_points_identified > min_timepoint_present)
+
+    # information for user
+    if (!quiet) {
+      n_original <- nrow(data)
+      n_kept <- nrow(filtered_data)
+      glue(
+        "Info: kept {n_kept} of {n_original} ({round(n_kept/n_original*100, 1)}%) rows"
+      ) %>%
+        message()
+    }
+    return(filtered_data)
+  }
+
+
+
+
+#' Plot degradation curves
+#' @description create graphs showing proportion of unlabeled fraction over time to visualize degradation
+#' @param fraculab_data or fraculab_data_clean
+#' @param number of proteins (or peptides?) to plot?
+plot_deg_curve <- function(fraculab_data_clean, prots_to_plot = 10) {
+
+  fraculab_data_clean %>%
+    filter(prot %in% unique(prot)[1:prots_to_plot]) %>%
+    ggplot() +
+    aes(hours - min(hours), frac_lab, color = prot, shape = replicate, size = svmPred) +
+    geom_point() +
+    theme(legend.position="none") +
+    facet_wrap(~prot)
+  #library(plotly)
+  #ggplotly()
+
+}
+
+
+
+
+
+
+
+
+
+#' make master list: combine peptide data to protein level
+#' @description Average kdeg values of peptides per protein (Step 12d-e in workflow, previously performed in Igor)
+#' @param deg_rate_data
+#' @param min_chisq
+#' @param min_num_peptides
+make_prot_master <- function(deg_rate_data, min_chisq = 3, min_num_peptides=2) {
+
+  # average kdeg values for all peptides that correspond to single protein = kdegavg
+  # calculate number of peptides that correspond to sing protein = npep
+  # remove proteins that not meet min_chisq and min_num_peptide criteria
+
+  # output example: return(prot_sum_data)
+}
+
+
+
+
+#' Calculate real degradation rate, calculate dissipation rate
+#' @description Calculate the percent of the protein that was degraded during one generation(Step 12f-g in workflow, previously performed in Igor)
+#' @param prot_sum_data
+#' where does growth rate value come from?!
+calc_prot_dissipation <- function(prot_sum_data) {
+
+  # kdegReal = kdegavg - growth rate
+  # dissipation = kdegReal / (kdegReal + growth rate)
+
+  # output example: return(prot_disp_data)
+}

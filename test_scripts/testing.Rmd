@@ -1,67 +1,167 @@
 ---
 title: "Testing the file read"
-output: html_document
+output: 
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup}
 library(tidyverse)
 library(stringr)
+library(readxl)
+library(knitr)
+library(broom)
+library(modelr)
+library(plotly)
+library(glue)
+knitr::opts_knit$set(root.dir = "..") 
 ```
 
 
 ```{r}
 devtools::load_all(".")
-filepath <- file.path("tests", "testthat", "test_data", "svm_pred_results.csv")
+filepath <- file.path("tests", "testthat", "test_data", "svm_pred_results_0.03gr.csv")
 svm_data <- read_svm_data_file(filepath)
+metadata <- read_excel(file.path("test_scripts", "metadata_CMW.xlsx"))
+psms <- read_csv(file.path("tests", "testthat", "test_data", "psms.csv"))
+kable(metadata, d=2)
 ```
 
 
 
 ```{r}
-svm_data %>% 
-  process_svm_data(pred_cutoff = 0.75) %>% 
+svm_data_filtered <- 
+  svm_data %>% 
+  # turnover function
+  rename_proteins(file.path("tests", "testthat", "test_data", "rename_prot.xlsx")) %>% 
+  # turnover function
+  filter_peptides_by_spectral_fit(pred_cutoff = 0.75) %>% 
+  # turnover function
+  calculate_fraculab() %>% 
+  # adjust names (not a turnover function)
+  select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_ulab, frac_lab) %>% 
+  # turnover function
+  #filter_min_timepoints(min_timepoint_present = 3) %>% 
+  # add metatdata to get times for samples - should this be a turnover function?
+  left_join(metadata, by = "sample")
+```
+
+
+```{r}
+# look for data matches
+svm_data_proteins_only <- svm_data_filtered %>% 
+  select(unishort, protein) %>% 
+  unique()
+
+# could match also by str_c(protein, "_ECOLI") with similar results
+svm_data_with_uniprot_info <- svm_data_proteins_only %>% 
+  left_join(prots, by = c("unishort" = "uniprot_id"))
+
+```
+
+```{r}
+sector_list <- read_csv(file.path( "test_scripts",  "Proteome_sectors_masterlist.csv"), 
+                        col_types =  cols(
+                           `Gene name` = col_character(),
+                           Sector = col_character())) %>% 
+  rename(gene = `Gene name`, sector = Sector)
+
+svm_data_with_sector_and_abundance <- 
+  svm_data_with_uniprot_info %>% 
+  # add sector
+  left_join(sector_list, by = "gene") %>% 
+  # add abundance
+  left_join(psms, by = "protein") 
+
+# could look at these more to find the ones without sector info
+# View(svm_data_with_sector_and_abundance %>% filter(is.na(sector)))
+
+# could look at these more to find the ones that were not in T0 dataset
+# View(svm_data_with_sector_and_abundance %>% filter(is.na(T0_counts)))
+
+svm_data_with_sector_and_abundance %>% 
+  group_by(sector) %>% 
+  summarize(tally_counts = sum(T0_counts, na.rm = T)) %>% 
+  ungroup() %>% 
   mutate(
-    frac_ulab = ampU / (ampU + ampL),
-    frac_lab = 1-frac_ulab
+    percent = tally_counts/sum(tally_counts) * 100
+  )
+```
+
+
+```{r}
+growth_rate = 0.46*60 /894.4 
+generation_time = log(2) / growth_rate
+final_data <- calculate_label_rate(svm_data_filtered, quiet = FALSE) %>% 
+  filter(enough_data, !fit_error) %>% 
+  select(-enough_data, -fit_error) %>% 
+  calculate_degrate_dissipation(growth_rate)
+```
+
+
+
+# What do the different residual standard error ranges look like?
+
+Note: resid. SE would look different if tp=0 were not included in the fit (i.e. assuming tp 0 would always be 0% labeled and any measurements that indicates not 0 tp would not be relevant)
+```{r}
+plot_label_rate_hist(final_data)
+plot_label_rate_error(final_data)
+plot_labeling_curves(final_data, plot_number = 20)
+```
+
+
+```{r}
+final_table <-final_data %>% 
+  left_join(psms, by = "protein") %>% 
+  mutate(
+    relative_abundance =  (T0_counts / sum(T0_counts, na.rm = TRUE)),
+    weighted_deg = deg_rate * relative_abundance
   ) %>% 
-  left_join(meta_data, by = "sample") %>% 
-  select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_lab) %>% 
-  arrange(sample, protein) %>% 
-  spread(sample, frac_lab, fill = 0)
+  select(-nested_data, -fit)
+
+#filter data based on... no neg rates??
 ```
 
 
+```{r fig.width = 10, fig.height=10}
+# we shoudl include something like this with the curves
+se_groups <- c(1, 2.5, 5, 7.5, 10, 15, 20, 25, 30)
 
-```{r}
-meta_data <- readxl::read_excel(file.path("test_scripts", "metadata.xlsx"))
-
-processed_data <- svm_data %>% 
-  process_svm_data(pred_cutoff = 0.75) %>% 
-  rename(unishort = uniShort, protein = prot, isopep = seqz) %>% 
+# plot data based on standard error to get a sense for cutoffs
+p <- svm_models %>%
+  filter(!nls_error) %>%
   mutate(
-    frac_ulab = ampU / (ampU + ampL),
-    frac_lab = 1-frac_ulab
-  ) %>% 
-  left_join(meta_data, by = "sample") %>% 
-  group_by(protein, isopep) %>%
-  # calculate the number of time points where the peptide is identified
+    nls_resid_se = 100*map_dbl(nls_summary, ~.x$sigma),
+    se_group = map_dbl(nls_resid_se, ~sum(.x > se_groups) + 1),
+    se_group_name = map_dbl(se_group, ~se_groups[.x])
+  ) %>%
+  arrange(se_group, desc(nls_resid_se)) %>% 
+  group_by(se_group) %>% mutate(se_group_nr = 1:n()) %>% ungroup() %>% 
+  # select up to 3 in each group
+  filter(se_group_nr <= 3) %>% 
+  #filter(nls_resid_se > 15) %>%
+  # NOTE: select random set of curves in different intervals of resid.SE
+  # randomly select 9 curves
+  arrange(nls_resid_se) %>% 
+  mutate(panel = forcats::as_factor(paste("resid. SE [% labeled] about", se_group_name))) %>% 
+  # calculate curves
   mutate(
-    n_time_points_identified = n()
-  ) %>% ungroup() %>% 
-  # filter out the ones that are not present in enough time points
-  filter(n_time_points_identified > 3)
-```
-
-
-```{r}
-processed_data %>% 
-  filter(prot %in% unique(prot)[1:10]) %>% 
+    nls_fit_curve = map2(data, nls_fit, ~data_grid(.x, hours = seq_range(hours, 20)) %>%
+                           add_predictions(.y, var = "frac_lab"))
+  ) %>%
+  # plot
   ggplot() +
-  aes(hours - min(hours), frac_lab, color = prot, shape = replicate, size = svmPred) +
-  geom_point() +
-  theme(legend.position="none") +
-  facet_wrap(~prot)
-#library(plotly)
-#ggplotly()
+  aes(x = hours, y = frac_lab, color = protein, group = isopep, label = nls_resid_se) +
+  geom_line(data = function(x) unnest(x, nls_fit_curve)) +
+  geom_line(data = function(x) unnest(x, data), linetype = 2) +
+  geom_point(data = function(x) unnest(x, data)) +
+  facet_wrap(~panel)
+ggplotly(p)
 ```
 
