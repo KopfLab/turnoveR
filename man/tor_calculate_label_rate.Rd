@@ -9,8 +9,8 @@ tor_calculate_label_rate(data, combine_peptides = TRUE, quiet = FALSE)
 \arguments{
 \item{data}{the svm_data with fraclab/fraculab calculated \link{tor_calculate_labeled_fraction}}
 
-\item{max_label}{amount of maximum label on scale 0-1 (1 = 100% label)}
+\item{max_label}{amount of maximum label on scale 0-1 (1 = 100\% label)}
 }
 \description{
-calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
+Calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
 }

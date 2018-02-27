@@ -1,7 +1,8 @@
 #' Calculate protein or peptide labeling rate
-#' @description calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
+#'
+#' Calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
 #' @param data the svm_data with fraclab/fraculab calculated \link{tor_calculate_labeled_fraction}
-#' @param max_label amount of maximum label on scale 0-1 (1 = 100% label)
+#' @param max_label amount of maximum label on scale 0-1 (1 = 100\% label)
 #' @export
 tor_calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
 
