@@ -1,7 +1,8 @@
 #' Plot label rate histogram
 #' @description creates histogram of labeing rate
 #' @param data data with label rate calculated, including growth rate
-plot_label_rate_hist <- function(data) {
+#' @export
+tor_plot_label_rate_hist <- function(data) {
 
   # safety checks for data
   if (missing(data)) stop("need to supply a data set", call. =FALSE)
@@ -32,7 +33,8 @@ plot_label_rate_hist <- function(data) {
 #' plot label rate error
 #' @description visualize the label rate and residual standard error
 #' @param data data with label rate calculated, including growth rate standard errors
-plot_label_rate_error <- function(data) {
+#' @export
+tor_plot_label_rate_error <- function(data) {
 
   # safety checks for data
   if (missing(data)) stop("need to supply a data set", call. =FALSE)
@@ -68,7 +70,8 @@ plot_label_rate_error <- function(data) {
 #' @param data data with label rate (and error), growth rate (and error)
 #' @param grouping by protein or peptide for visualization ??
 #' @param plot_number designate number of curves you want to see
-plot_labeling_curves <- function(data, grouping = protein, plot_number = 6) {
+#' @export
+tor_plot_labeling_curves <- function(data, grouping = protein, plot_number = 6) {
 
   # safety checks for data
   if (missing(data)) stop("need to supply a data set", call. =FALSE)

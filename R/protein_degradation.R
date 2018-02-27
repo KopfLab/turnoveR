@@ -1,8 +1,9 @@
 #' Calculate protein or peptide labeling rate
 #' @description calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
-#' @param data the svm_data with fraclab/fraculab calculated \link{calculate_fraculab}
+#' @param data the svm_data with fraclab/fraculab calculated \link{tor_calculate_labeled_fraction}
 #' @param max_label amount of maximum label on scale 0-1 (1 = 100% label)
-calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
+#' @export
+tor_calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
 
   # safety checks for data
   if (missing(data)) stop("need to supply a data set", call. =FALSE)
@@ -88,12 +89,15 @@ calculate_label_rate <- function(data, combine_peptides = TRUE, quiet = FALSE) {
 }
 
 
-#' Calculate degradation rate,
-#' @description calculate kdeg (previously performed in Igor)
+#' Calculate degradation rate
+#'
+#' Calculate degradataion and dissipation, including propagated error.
+#'
 #' @param data data with label rate calculated
 #' @param growth_rate growth rate from experiment
 #' @param growth_rate_se standard error of growth rate from experiment
-calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0) {
+#' @export
+tor_calculate_degradation_dissipation <- function(data, growth_rate, growth_rate_se = 0) {
 
   # safety checks for data
   if (missing(data)) stop("need to supply a data set", call. =FALSE)
@@ -105,10 +109,10 @@ calculate_degrate_dissipation <- function(data, growth_rate, growth_rate_se = 0)
 
   #safety check for required variables (need label rate, label reate error columns)
   if (!"label_rate" %in% names(data)){
-    stop ("Label rate column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
+    stop ("Label rate column does not exist in the dataset. Run function tor_calculate_label_rate first.") %>% stop(call. = FALSE)
   }
   if (!"label_rate_se" %in% names(data)){
-    stop ("Label rate error column does not exist in the dataset. Run function calculate_label_rate first.") %>% stop(call. = FALSE)
+    stop ("Label rate error column does not exist in the dataset. Run function tor_calculate_label_rate first.") %>% stop(call. = FALSE)
   }
 
 data<- data %>%

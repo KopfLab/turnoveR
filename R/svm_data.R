@@ -5,7 +5,7 @@
 #' @param filepath the path to the svm data file
 #' @return data_frame with the read data
 #' @export
-read_svm_data_file <- function(filepath) {
+tor_read_svm_data_file <- function(filepath) {
 
   if(!file.exists(filepath)) {
     glue("This svm file does not seem to exist '{filepath}' in the current working directory") %>%
@@ -41,7 +41,7 @@ read_svm_data_file <- function(filepath) {
 #' @description process and filter data (Step 10 in current workflow)
 #' @param svm_data the SVM data
 #' @param pred_cutoff the probability cutoff from the svm prediction
-filter_peptides_by_spectral_fit <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
+tor_filter_peptides_by_spectral_fit <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
 
   if (missing(svm_data)) stop("need to supply the svm data frame", call. =FALSE)
   if (!is.data.frame(svm_data)) {
@@ -67,10 +67,14 @@ filter_peptides_by_spectral_fit <- function(svm_data, pred_cutoff = 0.75, quiet 
 
 # -- finished
 
+#' Rename proteins based on protein mapping file
+#'
+#' This function may be obsolete once uniprot integration is completed.
+#'
 #' @param data the data set
 #' @param renaming_protein_map_file the filepath to the xlsx mapping file
 #' @param prot_col the name of the column that has the protein ID/name
-rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", prot_new_col = "protNew", quiet = FALSE) {
+tor_rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", prot_new_col = "protNew", quiet = FALSE) {
 
   # safety checks for data
   if (missing(data)) stop("need to supply a data set", call. =FALSE)
@@ -121,14 +125,16 @@ rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", 
 }
 
 
-# finished -- maybe change name to something calculate_labeled_fraction?
-# add option for columns being differently names (ampU, amplL)
 
-#' Calculate labeled fraction 1
+# add option for columns being differently names (ampU, amplL)
+#' Calculate labeled fraction
+#'
+#' Cacluated the labeled and unlabaled fraction based on labeld and unlabeld amplitudes.
+#'
 #' @description Calculate fraclab, add to metadata(replace excel step 11)
 #' @param  filtered_data the filtered svm data
 #' @export
-calculate_fraculab <- function(data) {
+tor_calculate_labeled_fraction <- function(data) {
 
   #checking whether data file was supplied, and in correct format
   if (missing(data)) stop("need to supply the data frame", call. =FALSE)
@@ -145,10 +151,10 @@ calculate_fraculab <- function(data) {
 
 
   return(data)
-
 }
 
 # finished -- except for maybe a few more checks AND allow for overwriting default column names
+# Q: are we actuall still using this one or is it going to be filtering after the degradation curves are calculated?
 
 #' Filter data based on number of timepoints where the peptide is identified
 #' @description (Step 11 in workflow)
@@ -185,58 +191,3 @@ filter_min_timepoints <-function(data, min_timepoint_present = 3, quiet = FALSE)
 
 
 
-
-#' Plot degradation curves
-#' @description create graphs showing proportion of unlabeled fraction over time to visualize degradation
-#' @param fraculab_data or fraculab_data_clean
-#' @param number of proteins (or peptides?) to plot?
-plot_deg_curve <- function(fraculab_data_clean, prots_to_plot = 10) {
-
-  fraculab_data_clean %>%
-    filter(prot %in% unique(prot)[1:prots_to_plot]) %>%
-    ggplot() +
-    aes(hours - min(hours), frac_lab, color = prot, shape = replicate, size = svmPred) +
-    geom_point() +
-    theme(legend.position="none") +
-    facet_wrap(~prot)
-  #library(plotly)
-  #ggplotly()
-
-}
-
-
-
-
-
-
-
-
-
-#' make master list: combine peptide data to protein level
-#' @description Average kdeg values of peptides per protein (Step 12d-e in workflow, previously performed in Igor)
-#' @param deg_rate_data
-#' @param min_chisq
-#' @param min_num_peptides
-make_prot_master <- function(deg_rate_data, min_chisq = 3, min_num_peptides=2) {
-
-  # average kdeg values for all peptides that correspond to single protein = kdegavg
-  # calculate number of peptides that correspond to sing protein = npep
-  # remove proteins that not meet min_chisq and min_num_peptide criteria
-
-  # output example: return(prot_sum_data)
-}
-
-
-
-
-#' Calculate real degradation rate, calculate dissipation rate
-#' @description Calculate the percent of the protein that was degraded during one generation(Step 12f-g in workflow, previously performed in Igor)
-#' @param prot_sum_data
-#' where does growth rate value come from?!
-calc_prot_dissipation <- function(prot_sum_data) {
-
-  # kdegReal = kdegavg - growth rate
-  # dissipation = kdegReal / (kdegReal + growth rate)
-
-  # output example: return(prot_disp_data)
-}

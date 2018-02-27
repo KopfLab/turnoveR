@@ -3,7 +3,7 @@
 #' Fetch uniprot information
 #'
 #' @export
-fetch_uniprot_proteins <- function(taxon = 83333, read_cache = TRUE, cache_dir = "cache") {
+tor_fetch_uniprot_proteins <- function(taxon = 83333, read_cache = TRUE, cache_dir = "cache") {
 
   if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive = TRUE)
 
