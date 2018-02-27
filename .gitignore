@@ -47,4 +47,4 @@ vignettes/*.pdf
 /test_scripts/
 
 # documentations
-!/docs/*/*.html
+!/docs/*
