@@ -4,9 +4,9 @@
 \name{turnoveR-package}
 \alias{turnoveR}
 \alias{turnoveR-package}
-\title{turnoveR: What the Package Does (one line, title case)}
+\title{turnoveR: Processing tools for protein degradation experiments.}
 \description{
-What the package does (one paragraph).
+This packages provides a collection of data processing, protein information and data visualization funtions.
 }
 \seealso{
 Useful links:
@@ -17,7 +17,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Corinne Walsh \email{corinne.walsh@colorado.edu}
+
+Authors:
+\itemize{
+  \item Sebastian Kopf \email{sebastian.kopf@colorado.edu}
+}
 
 }
 \keyword{internal}

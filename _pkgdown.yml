@@ -1,0 +1,46 @@
+title: turnoveR
+url: http://turnover.kopflab.org
+template:
+  params:
+    bootswatch: simplex
+
+home:
+  strip_header: true
+
+navbar:
+  title: turnoveR
+  type: default
+  left:
+  - text: "Analysis"
+    href: articles/analysis_demo.html
+  - text: "Reference"
+    href: reference/index.html
+  right:
+  - icon: fa-github fa-lg
+    href: https://github.com/kopflab/turnoveR
+
+
+reference:
+- title: Data processing
+  desc: >
+    General data processing functions.
+  contents:
+  - matches("svm")
+  - tor_rename_proteins
+  - tor_filter_peptides_by_spectral_fit
+- title: Calculation functions
+  desc: >
+    Functions to perform calculations on protein turnover data.
+  contents:
+  - matches("calculate")
+- title: Visualization functions
+  desc: >
+    Functions to visualize the data.
+  contents:
+  - matches("plot")
+- title: Protein database functions
+  desc: >
+    Functions to fetch information from protein databases.
+  contents:
+  - matches("kegg")
+  - matches("uniprot")

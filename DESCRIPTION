@@ -1,8 +1,11 @@
 Package: turnoveR
-Title: What the Package Does (one line, title case)
-Version: 0.0.1.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Title: Processing tools for protein degradation experiments.
+Version: 0.1.0.9000
+Authors@R: c(
+    person("Corinne", "Walsh", , "corinne.walsh@colorado.edu", role = c("aut", "cre")),
+    person("Sebastian", "Kopf", , "sebastian.kopf@colorado.edu", role = "aut")
+    )
+Description: This packages provides a collection of data processing, protein information and data visualization funtions.
 URL: https://github.com/kopflab/turnoveR
 BugReports: https://github.com/kopflab/turnoveR/issues
 Depends: 
@@ -27,7 +30,7 @@ Suggests:
   knitr,
   rmarkdown
 biocViews: 
-License: What license is it under?
+License: MIT
 Encoding: UTF-8
 LazyData: true
 VignetteBuilder: knitr

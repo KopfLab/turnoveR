@@ -42,3 +42,9 @@ vignettes/*.pdf
 *.pdf
 *.png
 *.xml
+
+# testing files
+/test_scripts/
+
+# documentations
+!/docs/*/*.html

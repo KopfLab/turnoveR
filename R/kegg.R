@@ -11,7 +11,7 @@
 #' @param ... additional parameters passed on to \link[utils]{download.file}
 #' @return returns the unaltered pathways data frame
 #' @export
-fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", overwrite = FALSE, kgml = TRUE, species_png = TRUE, general_png = TRUE, quiet = TRUE, ...) {
+tor_fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", overwrite = FALSE, kgml = TRUE, species_png = TRUE, general_png = TRUE, quiet = TRUE, ...) {
   # safety checks
   if (missing(pathways) || !is.data.frame(pathways))
     stop("no pathways data frame provided", call. = FALSE)
@@ -73,11 +73,11 @@ fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", overwrit
 
 #' Fetch KEGG pathway details
 #'
-#' Convenience wrapper to accept a pathways data frame and focus on the most relevant columns for pathways (uses \link{fetch_kegg_details} internally).
+#' Convenience wrapper to accept a pathways data frame and focus on the most relevant columns for pathways (uses \link{tor_fetch_kegg_details} internally).
 #'
 #' @param pathways data frame with column kegg_pathway_id
 #' @export
-fetch_kegg_pathway_details <- function(pathways) {
+tor_fetch_kegg_pathway_details <- function(pathways) {
 
   # safety checks
   if (missing(pathways) || !is.data.frame(pathways))
@@ -90,7 +90,7 @@ fetch_kegg_pathway_details <- function(pathways) {
          "and <pathway> is the pathway id (e.g. '00020' for the TCA cycle)") %>%
     stop(call. = FALSE)
 
-  info <- fetch_kegg_details(pathways$kegg_pathway_id)
+  info <- tor_fetch_kegg_details(pathways$kegg_pathway_id)
 
   # discard unneded (or confusing) columns if they exist
   discard_cols <- c("organism")
@@ -109,7 +109,7 @@ fetch_kegg_pathway_details <- function(pathways) {
 #' Fetch KEGG species
 #'
 #' @export
-fetch_kegg_species <- function() {
+tor_fetch_kegg_species <- function() {
   # user info
   glue("Info: querying KEGG API for species list...") %>% message()
   tbl_df(keggList("organism"))
@@ -117,15 +117,15 @@ fetch_kegg_species <- function() {
 
 #' Fetch all KEGG pathways for a species
 #'
-#' @param org_id KEGG organism code (typically 3-4 characters), if not provided, will be searched based on \code{species_name} using \link{fetch_kegg_species}
+#' @param org_id KEGG organism code (typically 3-4 characters), if not provided, will be searched based on \code{species_name} using \link{tor_fetch_kegg_species}
 #' @param species_name species name or regular expression to identify the organism of interest
 #' @export
-fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(), species_name = NULL) {
+tor_fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(), species_name = NULL) {
 
   find_by_species_name <- function() {
     if (is.null(species_name))
       stop("species name is required to find organism code", call. = FALSE)
-    org <- fetch_kegg_species() %>% filter(str_detect(species, species_name))
+    org <- tor_fetch_kegg_species() %>% filter(str_detect(species, species_name))
     if (nrow(org) == 0)
       glue("could not identify species based on '{species_name}'") %>% stop(call. = FALSE)
     else if (nrow(org) > 1)
@@ -178,7 +178,7 @@ fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(), spe
 #' @param kegg_id one or more KEGG identifiers. Can only do 10 requests at a time (see \link[KEGGREST]{keggGet}) so if there are more than 10, splits up into multiple queries.
 #' @param unnest_single_values whether to unnest single values (values that have a none or only a single entry for all retrieve records)
 #' @export
-fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ...) {
+tor_fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ...) {
   # safety checks
   if (missing(kegg_id)) stop("no KEGG API entries provided", call. = FALSE)
 

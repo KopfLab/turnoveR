@@ -9,12 +9,12 @@ test_that("Testing file quality", {
   )
 
   #test that input data file is correct format
-  expect_error(plot_label_rate_hist(), "need .* data set")
-  expect_error(plot_label_rate_hist(5), "wrong data type")
+  expect_error(tor_plot_label_rate_hist(), "need .* data set")
+  expect_error(tor_plot_label_rate_hist(5), "wrong data type")
 
   #test that input data file is complete
-  expect_error(plot_label_rate_hist(mock_data %>% select(-growth_rate)), ".* does not exist") #add appropriate error messages
-  expect_error(plot_label_rate_hist(mock_data %>% select(-label_rate)), ".* does not exist")
+  expect_error(tor_plot_label_rate_hist(mock_data %>% select(-growth_rate)), ".* does not exist") #add appropriate error messages
+  expect_error(tor_plot_label_rate_hist(mock_data %>% select(-label_rate)), ".* does not exist")
 
   mock_data2 <- data_frame(
     label_rate = c(0.09220716), #, 0.07712532, 0.08902904
@@ -24,14 +24,14 @@ test_that("Testing file quality", {
   )
 
   #test that input data file is correct format
-  expect_error(plot_label_rate_error(), "need .* data set")
-  expect_error(plot_label_rate_error(5), "wrong data type")
+  expect_error(tor_plot_label_rate_error(), "need .* data set")
+  expect_error(tor_plot_label_rate_error(5), "wrong data type")
 
   #test that input data file is complete
-  expect_error(plot_label_rate_error(mock_data2 %>% select(-label_rate)), ".* does not exist")
-  expect_error(plot_label_rate_error(mock_data2 %>% select(-label_rate_se)), ".* does not exist")
-  expect_error(plot_label_rate_error(mock_data2 %>% select(-growth_rate)), ".* does not exist")
-  expect_error(plot_label_rate_error(mock_data2 %>% select(-fit_rse)), ".* does not exist")
+  expect_error(tor_plot_label_rate_error(mock_data2 %>% select(-label_rate)), ".* does not exist")
+  expect_error(tor_plot_label_rate_error(mock_data2 %>% select(-label_rate_se)), ".* does not exist")
+  expect_error(tor_plot_label_rate_error(mock_data2 %>% select(-growth_rate)), ".* does not exist")
+  expect_error(tor_plot_label_rate_error(mock_data2 %>% select(-fit_rse)), ".* does not exist")
 
 
   mock_data3 <- data_frame(
@@ -43,12 +43,12 @@ test_that("Testing file quality", {
   ##nested data??
 
   #test that input data file is correct format
-  expect_error(plot_labeling_curves(), "need .* data set")
-  expect_error(plot_labeling_curves(5), "wrong data type")
+  expect_error(tor_plot_labeling_curves(), "need .* data set")
+  expect_error(tor_plot_labeling_curves(5), "wrong data type")
 
   #test that input data file is complete
-  expect_error(plot_labeling_curves(mock_data3 %>% select(-label_rate)), ".* does not exist")
-  expect_error(plot_labeling_curves(mock_data3 %>% select(-nested_data)), ".* does not exist")
-  expect_error(plot_labeling_curves(mock_data3 %>% select(-growth_rate)), ".* does not exist")
-  expect_error(plot_labeling_curves(mock_data3 %>% select(-fit)), ".* does not exist")
+  expect_error(tor_plot_labeling_curves(mock_data3 %>% select(-label_rate)), ".* does not exist")
+  expect_error(tor_plot_labeling_curves(mock_data3 %>% select(-nested_data)), ".* does not exist")
+  expect_error(tor_plot_labeling_curves(mock_data3 %>% select(-growth_rate)), ".* does not exist")
+  expect_error(tor_plot_labeling_curves(mock_data3 %>% select(-fit)), ".* does not exist")
 })
