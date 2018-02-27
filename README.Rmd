@@ -18,7 +18,7 @@ version <- as.character(packageVersion("turnoveR"))
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/turnoveR)](https://cran.r-project.org/package=turnoveR)
 [![Git_Hub_Version](https://img.shields.io/badge/GitHub-`r version`-orange.svg?style=flat-square)](/commits)
 [![Last-Update](https://img.shields.io/badge/updated-`r gsub('-', '--', Sys.Date())`-yellowgreen.svg)](/commits)
-[![Documentation](https://img.shields.io/badge/docs-online-green.svg)](https://kopflab.github.io/turnoveR/)
+[![Documentation](https://img.shields.io/badge/docs-online-green.svg)](https://kopflab.github.io/turnoveR/reference/)
 [![Build Status](https://travis-ci.org/KopfLab/turnoveR.svg?branch=master)](https://travis-ci.org/KopfLab/turnoveR)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/KopfLab/turnoveR?branch=master&svg=true)](https://ci.appveyor.com/project/KopfLab/turnoveR)
 
@@ -37,4 +37,4 @@ devtools::install_github("KopfLab/turnoveR")
 
 ## Functionality
 
-For an example of how to use the turnoveR package, see the vignette on [Data Analysis](https://kopflab.github.io/turnoveR/articles/analysis_demo.html).
+For a full reference of all functions, see the [documentation](https://kopflab.github.io/turnoveR/reference/). For an example of how to use the turnoveR package, see the vignette on [Data Analysis](https://kopflab.github.io/turnoveR/articles/analysis_demo.html).
