@@ -1,5 +1,8 @@
 
 
+#' Fetch uniprot information
+#'
+#' @export
 fetch_uniprot_proteins <- function(taxon = 83333, read_cache = TRUE, cache_dir = "cache") {
 
   if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive = TRUE)
@@ -19,15 +22,15 @@ fetch_uniprot_proteins <- function(taxon = 83333, read_cache = TRUE, cache_dir =
 
 
     # fetch from server
-    query <- '
+    query <- glue('
 PREFIX up:<http://purl.uniprot.org/core/>
 PREFIX taxon:<http://purl.uniprot.org/taxonomy/>
 PREFIX skos:<http://www.w3.org/2004/02/skos/core#>
-SELECT ?prot_id, ?uniprot_id, ?rec_prot_name, ?rec_ec_nr, ?gene, ?metacyc_id
+SELECT ?prot_id, ?uniprot_id, ?rec_prot_name, ?rec_ec_nr, ?gene, ?locus, ?metacyc_id
 WHERE {
   	?protein a up:Protein .
     # organism filter
-    ?protein up:organism taxon:83333 .
+    ?protein up:organism taxon:[taxon] .
 #  	?protein up:organism/up:scientificName ?organism .
     # mnemonic (for mapping to massacre output)
     ?protein up:mnemonic ?prot_id .
@@ -38,6 +41,7 @@ WHERE {
 #   OPTIONAL { ?protein up:recommendedName/up:shortName ?rec_prot_short } .
     # gene
     OPTIONAL { ?protein up:encodedBy/skos:prefLabel ?gene } .
+    OPTIONAL { ?protein up:encodedBy/up:locusName ?locus } .
 #   # maybe? amino acid sequence (NOTE: can also be multiple sequences, i.e. lead to column duplicates)
 #   ?protein up:sequence/rdf:value ?seq .
 
@@ -52,7 +56,7 @@ WHERE {
     } .
   #   #?protein up:mnemonic ?mnemonic .
   #  	#FILTER regex(?mnemonic,"^cysk","i")
-}'
+}', .open = '[', .close = ']')
 
     qd <- SPARQL("http://sparql.uniprot.org/sparql", query)
     data <- tbl_df(qd$results)
