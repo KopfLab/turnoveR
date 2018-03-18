@@ -1,22 +1,36 @@
+#' Query Uniprot Database
+#' @description access uniprot database and download protein information for organism of choise
+#' @param taxon the taxon ID of the organism desired for uniprot query
+#' @param read_cache TRUE if ok to read information from prior download if already cached
+#' @param cahce_dir directory for the cache to be stored
 
+fetch_uniprot_proteins <- function(taxon = 83333, read_cache = TRUE, cache_dir = "cache", quiet = FALSE) {
 
-fetch_uniprot_proteins <- function(taxon = 83333, read_cache = TRUE, cache_dir = "cache") {
+  # safety checks
+  if (missing(taxon)) stop("need to supply a taxon ID number", call. =FALSE)
 
   if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive = TRUE)
 
   cache_path <- file.path(cache_dir, glue("uniprot_{taxon}_proteins.rds"))
 
 
-  if (read_cache && file.exists(cache_path)) {
+  if (!quiet && read_cache && file.exists(cache_path)) {
 
-    # add some info message that we're reading from catch (and could do read_cache=FALSE to force new load from server)
+    # info message that we're reading from cache
+      glue("Info: Accessing cache {cache_dir} for uniprot information. To redownload
+           from Uniprot server, include 'read_cache = FALSE' in function parameter.") %>%
+        message()
 
     # read from cache
     data <- read_rds(cache_path)
+
   } else {
 
     # add some info message that this might take a while
-
+    if (!quiet) {
+      glue("Info: Accessing uniprot server for download...this may take a few seconds") %>%
+        message()
+    }
 
     # fetch from server
     query <- '
