@@ -1,0 +1,110 @@
+---
+title: "turnoveR Vignette"
+author: "CMW"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+
+---
+
+## Introduction to turnoveR
+
+**Text here about turnoveR
+
+## Installation
+
+## Data Input
+**list files required for analysis (svm_pred from Massacre, etc)
+**specify requirements of files (recommended column names, etc)
+
+## Functions
+
+###Data processing
+General data processing functions
+
+tor_read_svm_data_file - Read SVM data file
+
+tor_rename_proteins - Rename proteins based on protein mapping file
+
+tor_filter_peptides_by_spectral_fit - Process the SVM data
+
+###Calculation functions
+Functions to perform calculations on protein turnover data
+
+tor_calculate_degradation_dissipation - Calculate degradation rate
+
+tor_calculate_label_rate - Calculate protein or peptide labeling rate
+
+tor_calculate_labeled_fraction - Calculate labeled fraction
+
+###Visualization functions
+Functions to visualize the data
+
+tor_plot_label_rate_error - plot label rate error
+
+tor_plot_label_rate_hist - Plot label rate histogram
+
+tor_plot_labeling_curves - plot disippation curves
+
+## Example: Data Processing 
+
+###Reading in Files
+```{r}
+
+svm_data <- tor_read_svm_data_file(file.path("names", "in", "filepath", "svm_pred_results_example.csv"))
+
+metadata <- read_excel(file.path("filepath_name", "metadata_example.xlsx"))
+
+psms <- read_csv(file.path("filepath_name", "psms.csv"))
+```
+
+###Calculate Fraction of Labeled Proteins
+```{r}
+svm_data_filtered <- 
+  svm_data %>% 
+  tor_rename_proteins(file.path("filepath_name", "rename_prot.xlsx")) %>% 
+  tor_filter_peptides_by_spectral_fit(pred_cutoff = 0.75) %>% 
+  tor_calculate_labeled_fraction() %>% 
+  # adjust names 
+  select(unishort = uniShort, protein = prot, gene, isopep = seqz, sample, frac_ulab, frac_lab) %>% 
+ # add timepoints from metadata
+  left_join(metadata, by = "sample")
+```
+
+###Calculate Degradation and Dissipation rates 
+```{r}
+#Important: need vessel volume and flow rate for growth_rate calculation
+growth_rate = 0.46*60 /894.4 
+generation_time = log(2) / growth_rate
+
+final_data <- tor_calculate_label_rate(svm_data_filtered, quiet = FALSE) %>%
+  #filter out data with bad fits, or not enough data points 
+  filter(enough_data, !fit_error) %>% 
+  select(-enough_data, -fit_error) %>% 
+  
+  tor_calculate_degradation_dissipation(growth_rate) %>% 
+  
+  #add psms information to create weighted calculations
+  left_join(psms, by = "protein") %>% 
+  mutate(
+    relative_abundance =  (T0_counts / sum(T0_counts, na.rm = TRUE)),
+    weighted_deg = deg_rate * relative_abundance,
+    weighted_disp = dissipation * relative_abundance
+  ) %>% 
+  
+  #rename columns - need to make sure column names are consistent
+  rename(protein_count = T0_counts) %>% 
+  select(-nested_data, -fit)
+```
+
+
+##Example: Visualizations
+
+```{r}
+plot_label_rate_hist(final_data)
+plot_label_rate_error(final_data)
+plot_labeling_curves(final_data, plot_number = 2)
+```
+
