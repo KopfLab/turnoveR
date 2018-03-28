@@ -1,6 +1,6 @@
 ---
-title: "turnoveR Vignette"
-author: "CMW"
+title: "turnoveR: Data Processing"
+author: "Corinne Walsh"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Introduction}
@@ -9,15 +9,48 @@ vignette: >
 
 ---
 
+
+```{r message = FALSE, warning = FALSE}
+library(readxl)
+library(readr)
+library(dplyr)
+library(plotly)
+library(purrr)
+devtools::load_all(".")
+```
+
 ## Introduction to turnoveR
 
-**Text here about turnoveR
+With the original goal of quantifying protein turnover and protein degradation for as many proteins as possible in a proteome, the turnoveR package has been developed to analyse isotopically labeled proteomics datasets. 
 
-## Installation
+Experimental datasets intended for use with this package are generated from a series of samples taken from a steady-state bacterial culture. Samples are taken at different timepoints following an isotopic label "pulse".  
+
+Functions in the turnoveR package accept mass spectrometry datasets that have been pre-processed to estimate areas of the "heavy" and "light" isotopic labeled fractions for each protein (by programs such as Massacre). 
+
 
 ## Data Input
-**list files required for analysis (svm_pred from Massacre, etc)
-**specify requirements of files (recommended column names, etc)
+###Input File Types accepted
+
+"protein_sums.csv": a file containing a sum of how many times each protein was identified in each sample of a dataset 
+  
+    Preferred file type: .csv 
+    
+    Important column names: 
+  
+  
+"svm_results.csv": typically a massacre output file curated to remove poorly fitted curves 
+
+    Preferred file type: .csv 
+    
+    Important column names: 
+    
+    
+"metadata.xlxs": an excel sheet with sample timepoints, other sampling information 
+  
+    Preferred file type: .xlsx 
+    
+    Important column names: 
+
 
 ## Functions
 
@@ -51,20 +84,22 @@ tor_plot_labeling_curves - plot disippation curves
 ## Example: Data Processing 
 
 ###Reading in Files
-```{r}
+```{r message = FALSE, warning = FALSE}
 
-svm_data <- tor_read_svm_data_file(file.path("names", "in", "filepath", "svm_pred_results_example.csv"))
+svm_data <- tor_read_svm_data_file(file.path("vignette_data", "svm_pred_results_0.03gr.csv"))
 
-metadata <- read_excel(file.path("filepath_name", "metadata_example.xlsx"))
+metadata <- read_excel(file.path("vignette_data", "metadata_CMW.xlsx"))
 
-psms <- read_csv(file.path("filepath_name", "psms.csv"))
+psms <- read_csv(file.path("vignette_data", "psms.csv"))
+
+prot_rename_filepath <- file.path("vignette_data", "rename_prot.xlsx")
 ```
 
 ###Calculate Fraction of Labeled Proteins
 ```{r}
 svm_data_filtered <- 
   svm_data %>% 
-  tor_rename_proteins(file.path("filepath_name", "rename_prot.xlsx")) %>% 
+  tor_rename_proteins(prot_rename_filepath) %>% 
   tor_filter_peptides_by_spectral_fit(pred_cutoff = 0.75) %>% 
   tor_calculate_labeled_fraction() %>% 
   # adjust names 
@@ -79,14 +114,16 @@ svm_data_filtered <-
 growth_rate = 0.46*60 /894.4 
 generation_time = log(2) / growth_rate
 
+
 final_data <- tor_calculate_label_rate(svm_data_filtered, quiet = FALSE) %>%
   #filter out data with bad fits, or not enough data points 
   filter(enough_data, !fit_error) %>% 
   select(-enough_data, -fit_error) %>% 
   
-  tor_calculate_degradation_dissipation(growth_rate) %>% 
+  tor_calculate_degradation_dissipation(growth_rate) 
   
   #add psms information to create weighted calculations
+final_table <- final_data %>% 
   left_join(psms, by = "protein") %>% 
   mutate(
     relative_abundance =  (T0_counts / sum(T0_counts, na.rm = TRUE)),
@@ -100,11 +137,32 @@ final_data <- tor_calculate_label_rate(svm_data_filtered, quiet = FALSE) %>%
 ```
 
 
-##Example: Visualizations
+### Degradation Analysis - Looking at data
 
 ```{r}
-plot_label_rate_hist(final_data)
-plot_label_rate_error(final_data)
-plot_labeling_curves(final_data, plot_number = 2)
+#sum turnover rate for experiment 
+sum_dissipation = sum(final_table$weighted_disp, na.rm = TRUE) 
+sum_dissipation
+
+#list top proteins by label rate 
+label_top50 = top_n(final_table, n = 50, wt = final_table$label_rate)
+label_top50
+
+#list top proteins by relative abundance
+relative_abundance_top50 = top_n(final_table, n = 50, wt = final_table$relative_abundance)
+relative_abundance_top50
+
+#list top proteins by weighted degradation
+weighted_degradation_top50 = top_n(final_table, n = 50, wt = final_table$weighted_deg)
+weighted_degradation_top50
+```
+
+
+###Data Quality Visualizations
+
+```{r}
+tor_plot_label_rate_hist(final_data)
+tor_plot_label_rate_error(final_data)
+tor_plot_labeling_curves(final_data, plot_number = 2)
 ```
 
