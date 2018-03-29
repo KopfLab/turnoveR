@@ -11,8 +11,8 @@ navbar:
   title: turnoveR
   type: default
   left:
-  - text: "Analysis"
-    href: articles/analysis_demo.html
+  - text: "Data Processing"
+    href: articles/turnoveR_vignette.html
   - text: "Reference"
     href: reference/index.html
   right:

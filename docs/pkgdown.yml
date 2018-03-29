@@ -3,4 +3,5 @@ urls:
   article: http://turnover.kopflab.org/articles
 articles:
   analysis_demo: analysis_demo.html
+  turnoveR_vignette: turnoveR_vignette.html
 
