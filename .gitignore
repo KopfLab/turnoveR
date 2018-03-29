@@ -49,3 +49,4 @@ vignettes/*.pdf
 # documentations
 !/docs/*
 !/docs/articles/*.html
+!/docs/articles/**/*.png
