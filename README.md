@@ -3,7 +3,7 @@
 turnoveR
 ========
 
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/turnoveR)](https://cran.r-project.org/package=turnoveR) [![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.1.0.9000-orange.svg?style=flat-square)](/commits) [![Last-Update](https://img.shields.io/badge/updated-2018--02--26-yellowgreen.svg)](/commits) [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](https://kopflab.github.io/turnoveR/reference/) [![Build Status](https://travis-ci.org/KopfLab/turnoveR.svg?branch=master)](https://travis-ci.org/KopfLab/turnoveR) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/KopfLab/turnoveR?branch=master&svg=true)](https://ci.appveyor.com/project/KopfLab/turnoveR)
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/turnoveR)](https://cran.r-project.org/package=turnoveR) [![Git\_Hub\_Version](https://img.shields.io/badge/GitHub-0.1.0.9000-orange.svg?style=flat-square)](/commits) [![Last-Update](https://img.shields.io/badge/updated-2018--03--29-yellowgreen.svg)](/commits) [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](https://kopflab.github.io/turnoveR/reference/) [![Build Status](https://travis-ci.org/KopfLab/turnoveR.svg?branch=master)](https://travis-ci.org/KopfLab/turnoveR) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/KopfLab/turnoveR?branch=master&svg=true)](https://ci.appveyor.com/project/KopfLab/turnoveR)
 
 About
 -----
@@ -23,4 +23,4 @@ devtools::install_github("KopfLab/turnoveR")
 Functionality
 -------------
 
-For a full reference of all functions, see the [documentation](https://kopflab.github.io/turnoveR/reference/). For an example of how to use the turnoveR package, see the vignette on [Data Analysis](https://kopflab.github.io/turnoveR/articles/analysis_demo.html).
+For a full reference of all functions, see the [documentation](https://kopflab.github.io/turnoveR/reference/). For an example of how to use the turnoveR package, see the vignette on [turnoveR Data Processing](https://kopflab.github.io/turnoveR/articles/turnoveR_vignette.html).

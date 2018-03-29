@@ -37,4 +37,4 @@ devtools::install_github("KopfLab/turnoveR")
 
 ## Functionality
 
-For a full reference of all functions, see the [documentation](https://kopflab.github.io/turnoveR/reference/). For an example of how to use the turnoveR package, see the vignette on [Data Analysis](https://kopflab.github.io/turnoveR/articles/analysis_demo.html).
+For a full reference of all functions, see the [documentation](https://kopflab.github.io/turnoveR/reference/). For an example of how to use the turnoveR package, see the vignette on [turnoveR Data Processing](https://kopflab.github.io/turnoveR/articles/turnoveR_vignette.html).
