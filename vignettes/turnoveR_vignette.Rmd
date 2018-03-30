@@ -1,12 +1,9 @@
 ---
 title: "turnoveR: Data Processing"
 author: "Corinne Walsh"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Introduction}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
-
+output:
+  html_document:
+    df_print: paged
 ---
 
 
@@ -31,25 +28,20 @@ Functions in the turnoveR package accept mass spectrometry datasets that have be
 ## Data Input
 ###Input File Types accepted
 
-"protein_sums.csv": a file containing a sum of how many times each protein was identified in each sample of a dataset 
-  
-    Preferred file type: .csv 
-    
-    Important column names: 
-  
-  
-"svm_results.csv": typically a massacre output file curated to remove poorly fitted curves 
+#### "protein_sums.csv": 
+ - a file containing a sum of how many times each protein was identified in each sample of a dataset 
+ - Preferred file type: .csv 
+ - Important column names: 
 
-    Preferred file type: .csv 
-    
-    Important column names: 
-    
-    
-"metadata.xlxs": an excel sheet with sample timepoints, other sampling information 
-  
-    Preferred file type: .xlsx 
-    
-    Important column names: 
+#### "svm_results.csv": 
+ - typically a massacre output file curated to remove poorly fitted curves 
+ - Preferred file type: .csv 
+ - Important column names: 
+ 
+#### "metadata.xlsx": 
+ - an excel sheet with sample timepoints, other sampling information 
+ - Preferred file type: .xlsx 
+ - Important column names: 
 
 
 ## Functions
