@@ -74,6 +74,7 @@ tor_filter_peptides_by_spectral_fit <- function(svm_data, pred_cutoff = 0.75, qu
 #' @param data the data set
 #' @param renaming_protein_map_file the filepath to the xlsx mapping file
 #' @param prot_col the name of the column that has the protein ID/name
+#' @export
 tor_rename_proteins <- function(data, renaming_protein_map_file, prot_col = "prot", prot_new_col = "protNew", quiet = FALSE) {
 
   # safety checks for data
