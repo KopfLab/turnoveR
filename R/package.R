@@ -48,6 +48,14 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
         tooltip = ""
       ),
       tor_function(
+        name = "tor_add_metadata",
+        tooltip = ""
+      )
+    )
+
+  tor_info <-
+    list(
+      tor_function(
         name = "tor_add_uniprot_info",
         tooltip = ""
       ),
@@ -55,10 +63,6 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
         name = "tor_add_abundance_info",
         tooltip = "adds the protein abundance information to the peptides including calculation of relative abundances by counts and by mass",
         exists = FALSE
-      ),
-      tor_function(
-        name = "tor_add_metadata",
-        tooltip = ""
       ),
       tor_function(
         name = "tor_add_kegg_pathways_info",
@@ -167,6 +171,7 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
   kegg{"fa:fa-database KEGG"}
   kegg-->tor_fetch_kegg_species
   tor_fetch_kegg_species-->tor_fetch_kegg_pathways_for_species
+  tor_fetch_kegg_pathways_for_species-->tor_fetch_kegg_pathway_details
   end
 
   %% turnoverR data prep
@@ -175,47 +180,51 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
   metadata["fa:fa-file-excel-o metadata file (xlsx)"]
   metadata-->tor_add_metadata
   psms-->tor_filter_decoy
-  tor_filter_decoy-->tor_add_abundance_info
   svm-->tor_read_svm_data_file
   tor_read_svm_data_file-->tor_filter_peptides_by_spectral_fit_quality
   iso-->tor_calculate_spectral_fit_quality
   tor_calculate_spectral_fit_quality-->tor_filter_peptides_by_spectral_fit_quality
-  tor_fetch_uniprot_proteins-->tor_add_uniprot_info
-  tor_filter_peptides_by_spectral_fit_quality-->tor_add_uniprot_info
-  tor_add_uniprot_info-->tor_add_abundance_info
-  tor_add_abundance_info-->tor_add_metadata
-  tor_fetch_kegg_pathway_details-->tor_add_kegg_pathways_info
-  tor_add_metadata-->tor_add_kegg_pathways_info
+  tor_filter_peptides_by_spectral_fit_quality-->tor_add_metadata
   end
 
   %% turnoverR calculations
   subgraph turnoveR: calculations
   ${calc_functions}
-  tor_add_kegg_pathways_info-->tor_calculate_labeled_fraction
-  tor_fetch_kegg_pathways_for_species-->tor_fetch_kegg_pathway_details
+  tor_add_metadata-->tor_calculate_labeled_fraction
   tor_calculate_labeled_fraction-->tor_calculate_label_rate
   tor_calculate_label_rate-->tor_calculate_degradation_dissipation
   growth_rate(("fa:fa-info growth rate"))
   growth_rate-->tor_calculate_degradation_dissipation
   end
 
+  %% turnoveR information
+  subgraph turnoveR: information
+  ${info_functions}
+  tor_fetch_uniprot_proteins-->tor_add_uniprot_info
+  tor_calculate_degradation_dissipation-->tor_add_uniprot_info
+  tor_filter_decoy-->tor_add_abundance_info
+  tor_add_uniprot_info-->tor_add_abundance_info
+  tor_add_abundance_info-->tor_add_kegg_pathways_info
+  tor_fetch_kegg_pathway_details-->tor_add_kegg_pathways_info
+  reporting>"visualization & export (at any intermediate step)"]
+  tor_add_kegg_pathways_info-->reporting
+  end
+
   %% turnoveR visualization
   subgraph turnoveR: visualization
   ${plot_functions}
-  tor_calculate_degradation_dissipation-->tor_plot_label_rate_error
-  tor_calculate_degradation_dissipation-->tor_plot_label_rate_hist
-  tor_calculate_degradation_dissipation-->tor_plot_labeling_curves
-  tor_calculate_degradation_dissipation-->tor_plot_on_kegg_pathway
-  tor_calculate_degradation_dissipation-->tor_plot_comparison
+  reporting-->tor_plot_label_rate_error
+  reporting-->tor_plot_label_rate_hist
+  reporting-->tor_plot_labeling_curves
+  reporting-->tor_plot_on_kegg_pathway
+  reporting-->tor_plot_comparison
   end
 
   %% turnoveR export
   subgraph turnoveR: export
   ${export_functions}
   export["fa:fa-file-excel-o turnoveR export (xlsx)"]
-  tor_calculate_labeled_fraction-->tor_export_data
-  tor_calculate_label_rate-->tor_export_data
-  tor_calculate_degradation_dissipation-->tor_export_data
+  reporting-->tor_export_data
   tor_export_data-->export
   end
 
@@ -246,16 +255,17 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
       list(
         prep_functions = tor_prep %>% map_chr(~.x$node) %>% paste(collapse = "\n"),
         calc_functions = tor_calc %>% map_chr(~.x$node) %>% paste(collapse = "\n"),
+        info_functions = tor_info %>% map_chr(~.x$node) %>% paste(collapse = "\n"),
         db_functions = tor_db %>% map_chr(~.x$node) %>% paste(collapse = "\n"),
         plot_functions = tor_plot %>% map_chr(~.x$node) %>% paste(collapse = "\n"),
         export_functions = tor_export %>% map_chr(~.x$node) %>% paste(collapse = "\n"),
-        existing_funcs = c(tor_prep, tor_calc, tor_db, tor_plot, tor_export) %>%
+        existing_funcs = c(tor_prep, tor_calc, tor_info, tor_db, tor_plot, tor_export) %>%
           map_chr(~if(.x$exists) {.x$name} else {NA_character_} ) %>% na.omit() %>%
           paste(collapse = ","),
-        missing_funcs = c(tor_prep, tor_calc, tor_db, tor_plot, tor_export) %>%
+        missing_funcs = c(tor_prep, tor_calc, tor_info, tor_db, tor_plot, tor_export) %>%
           map_chr(~if(!.x$exists) {.x$name} else {NA_character_} ) %>% na.omit() %>%
           paste(collapse = ","),
-        tooltips = c(tor_prep, tor_calc, tor_db, tor_plot, tor_export) %>%
+        tooltips = c(tor_prep, tor_calc, tor_info, tor_db, tor_plot, tor_export) %>%
           map_chr(~.x$tooltip) %>% paste(collapse = "\n")
       )
     ) %>%
