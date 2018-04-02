@@ -5,7 +5,7 @@
 #' @param filepath the path to the svm data file
 #' @return data_frame with the read data
 #' @export
-tor_read_svm_data_file <- function(filepath) {
+tor_read_svm_data_file <- function(filepath, quiet = FALSE) {
 
   if(!file.exists(filepath)) {
     glue("This svm file does not seem to exist '{filepath}' in the current working directory") %>%
@@ -25,11 +25,16 @@ tor_read_svm_data_file <- function(filepath) {
                  svmPred = col_double(),
                  ampU = col_double(),
                  ampL = col_double(),
-                 sample = col_character(),
-                 series = col_character()
+                 sample = col_character()
                )
     ) %>%
     as_data_frame()
+
+  # information for user
+  if (!quiet) {
+    glue("Info: successfully read {nrow(data)} records from SVM file '{basename(filepath)}'") %>%
+      message()
+  }
 
   return(data)
 }
@@ -41,6 +46,7 @@ tor_read_svm_data_file <- function(filepath) {
 #' @description process and filter data (Step 10 in current workflow)
 #' @param svm_data the SVM data
 #' @param pred_cutoff the probability cutoff from the svm prediction
+#' @export
 tor_filter_peptides_by_spectral_fit <- function(svm_data, pred_cutoff = 0.75, quiet = FALSE) {
 
   if (missing(svm_data)) stop("need to supply the svm data frame", call. =FALSE)
