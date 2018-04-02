@@ -17,7 +17,7 @@ knitr::opts_knit$set(root.dir = "..")
 
 ```{r}
 # available species
-species <- fetch_kegg_species()
+species <- tor_fetch_kegg_species()
 species
 filter(species, str_detect(species, "K-12"))
 ```
@@ -27,7 +27,7 @@ filter(species, str_detect(species, "K-12"))
 
 ```{r}
 # pathways for species
-pathways <- fetch_kegg_pathways_for_species(org_id = "eco")
+pathways <- tor_fetch_kegg_pathways_for_species(org_id = "eco")
 pathways
 ```
 
@@ -40,9 +40,9 @@ details <-
   # focus on those that concern biosynthesis
   filter(str_detect(pathway, "biosynthesis")) %>% 
   # download pathway images and kgml files into kegg folder
-  fetch_kegg_pathway_maps() %>% 
+  tor_fetch_kegg_pathway_maps() %>% 
   # fetch pathway details
-  fetch_kegg_pathway_details()
+  tor_fetch_kegg_pathway_details()
 details
 
 # loadsd of information in this data frame, e.g. descriptions
@@ -56,7 +56,7 @@ details %>% unnest(compound) %>%
 
 # Experimental: KEGGgrpah
 
-Download is clusmy but now that we have fetch_kegg_pathway_maps() this looks promising for manipulating KEGG graphs... although maybe better to just work with the KEGG image API itself? If we can figure out how to POST parameters to the highlight genes and plot parameters over the 3D graph.
+Download is clusmy but now that we have tor_fetch_kegg_pathway_maps() this looks promising for manipulating KEGG graphs... although maybe better to just work with the KEGG image API itself? If we can figure out how to POST parameters to the highlight genes and plot parameters over the 3D graph.
 
 ```{r, eval=FALSE, include=FALSE}
 # how to modify this easily? to highlight the releavant genes online
@@ -79,7 +79,7 @@ url <- color.pathway.by.objects("path:eco00260",
 
 
 ```{r, eval=FALSE, include=FALSE}
-# the following is unnecssary with our new fetch_kegg_pathway_maps() function
+# the following is unnecssary with our new tor_fetch_kegg_pathway_maps() function
 #getKGMLurl("00020", organism = "eco")
 #retrieveKGML("00020", organism = "eco", destfile = file.path(maps_folder, "eco00020.xml"), method = "internal")
 #retrieveKGML("04110", organism = "hsa", destfile = file.path(maps_folder, "hsa04110.xml"), method = "internal")
@@ -217,5 +217,13 @@ temp <-
   )
 
 ```
+
+
+# Experiment: using iPath3
+
+Potentially use this interface: https://pathways.embl.de/tools.cgi
+
+-- could use the width of the pathway lines to highlight the turnover rates / maybe the alpha as well?
+should work with uniprot numbers and kegg id numbers
 
 

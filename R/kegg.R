@@ -11,7 +11,10 @@
 #' @param ... additional parameters passed on to \link[utils]{download.file}
 #' @return returns the unaltered pathways data frame
 #' @export
-tor_fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", overwrite = FALSE, kgml = TRUE, species_png = TRUE, general_png = TRUE, quiet = TRUE, ...) {
+tor_fetch_kegg_pathway_maps <- function(
+  pathways, download_folder = "kegg", overwrite = FALSE,
+  kgml = TRUE, species_png = TRUE, general_png = TRUE, quiet = TRUE, ...) {
+
   # safety checks
   if (missing(pathways) || !is.data.frame(pathways))
     stop("no pathways data frame provided", call. = FALSE)
@@ -52,9 +55,11 @@ tor_fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", over
     )
 
   # use info
-  glue("Info: requesting {nrow(urls)} files for {length(unique(urls$kegg_pathway_id))} pathways... ",
-       "{if (overwrite) 'overwriting' else 'skipping'} {sum(urls$exists)} existing files...") %>%
-    message()
+  if (!quiet) {
+    glue("Info: requesting {nrow(urls)} files for {length(unique(urls$kegg_pathway_id))} pathways... ",
+         "{if (overwrite) 'overwriting' else 'skipping'} {sum(urls$exists)} existing files...") %>%
+      message()
+  }
 
   # do download
   urls <- urls %>% filter(overwrite | !exists)
@@ -77,7 +82,7 @@ tor_fetch_kegg_pathway_maps <- function(pathways, download_folder = "kegg", over
 #'
 #' @param pathways data frame with column kegg_pathway_id
 #' @export
-tor_fetch_kegg_pathway_details <- function(pathways) {
+tor_fetch_kegg_pathway_details <- function(pathways, quiet = FALSE) {
 
   # safety checks
   if (missing(pathways) || !is.data.frame(pathways))
@@ -90,7 +95,7 @@ tor_fetch_kegg_pathway_details <- function(pathways) {
          "and <pathway> is the pathway id (e.g. '00020' for the TCA cycle)") %>%
     stop(call. = FALSE)
 
-  info <- tor_fetch_kegg_details(pathways$kegg_pathway_id)
+  info <- tor_fetch_kegg_details(pathways$kegg_pathway_id, quiet = quiet)
 
   # discard unneded (or confusing) columns if they exist
   discard_cols <- c("organism")
@@ -109,9 +114,10 @@ tor_fetch_kegg_pathway_details <- function(pathways) {
 #' Fetch KEGG species
 #'
 #' @export
-tor_fetch_kegg_species <- function() {
+tor_fetch_kegg_species <- function(quiet = FALSE) {
   # user info
-  glue("Info: querying KEGG API for species list...") %>% message()
+  if (!quiet)
+    glue("Info: querying KEGG API for species list...") %>% message()
   tbl_df(keggList("organism"))
 }
 
@@ -120,7 +126,7 @@ tor_fetch_kegg_species <- function() {
 #' @param org_id KEGG organism code (typically 3-4 characters), if not provided, will be searched based on \code{species_name} using \link{tor_fetch_kegg_species}
 #' @param species_name species name or regular expression to identify the organism of interest
 #' @export
-tor_fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(), species_name = NULL) {
+tor_fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(), species_name = NULL, quiet = FALSE) {
 
   find_by_species_name <- function() {
     if (is.null(species_name))
@@ -134,7 +140,8 @@ tor_fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(),
   }
 
   # user info
-  glue("Info: querying KEGG API for species' genes and pathways (this may take a few seconds)...") %>% message()
+  if (!quiet)
+    glue("Info: querying KEGG API for species' genes and pathways (this may take a few seconds)...") %>% message()
 
   gene_pathways <-
     keggLink("pathway", org_id) %>%
@@ -178,7 +185,7 @@ tor_fetch_kegg_pathways_for_species <- function(org_id = find_by_species_name(),
 #' @param kegg_id one or more KEGG identifiers. Can only do 10 requests at a time (see \link[KEGGREST]{keggGet}) so if there are more than 10, splits up into multiple queries.
 #' @param unnest_single_values whether to unnest single values (values that have a none or only a single entry for all retrieve records)
 #' @export
-tor_fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ...) {
+tor_fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ..., quiet = FALSE) {
   # safety checks
   if (missing(kegg_id)) stop("no KEGG API entries provided", call. = FALSE)
 
@@ -186,8 +193,10 @@ tor_fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ...) {
   # user info
   kegg_id <- unique(kegg_id)
   n_queries <- ceiling(length(kegg_id)/10)
-  glue("Info: querying KEGG API for {length(kegg_id)} unique KEGG entries (requires {n_queries} queries) ...") %>%
-    message()
+
+  if (!quiet)
+    glue("Info: querying KEGG API for {length(kegg_id)} unique KEGG entries (requires {n_queries} queries) ...") %>%
+      message()
 
   # query KEGG API
   query_results <-
@@ -252,6 +261,7 @@ tor_fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ...) {
             default_value <- do.call(str_c("as.", info_class), args = list(NA))
           else
             default_value <- do.call(info_class, args=list())
+          # note, could also do this with a right_join back in (but perhaps slower?)
           mutate(info_df_wide,
                  !!name := map(!!sym(name), ~if (is.null(.x)) { default_value } else { .x }))
         } else {
