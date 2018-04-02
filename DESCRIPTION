@@ -22,9 +22,9 @@ Imports:
   glue, 
   purrr, 
   KEGGREST,
-  SPARQL,
   broom, 
-  RCurl
+  RCurl,
+  DiagrammeR
 Suggests:
   testthat,
   knitr,
