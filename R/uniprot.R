@@ -173,8 +173,9 @@ run_uniprot_csv_query <- function(query, message = NULL,
 
     # user info
     if (!quiet) {
-      glue("retrieved {str_count(csv_data, '\\n') - 1L} records",
-         #  " - data stored in '{cache_path}'") %>%
+      glue("retrieved {str_count(csv_data, '\\n') - 1L} records"
+         #  " - data stored in '{cache_path}'"
+         ) %>%
         message()
     }
 
