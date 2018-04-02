@@ -1,0 +1,30 @@
+---
+title: "turnoveR: Package Structure"
+output: 
+  html_document:
+    toc: false
+pkgdown:
+  as_is: true
+---
+
+```{r echo=FALSE}
+# enable font awesome
+htmltools::tagList(rmarkdown::html_dependency_font_awesome())
+```
+
+The following flow chart illustrates the main functions and work flow of the turnoveR package. Mouseover individual steps to get additional information and click on individual turnover (`tor_`) functions to jump directly to the function documentation. This flow chart can also be easily generated from within RStudio as a on-the-fly reference using the `tor_show_package_structure()` function.
+
+## Legend
+
+ - <i class="fa fa-file-o"/> data files colored in <font color="blue">**blue**</font> - <i class="fa fa-file-text-o"/> text/csv files, <i class="fa fa-file-excel-o"/> Excel files, and <i class="fa fa-file-archive-o"/> complex data files
+ - <i class="fa fa-bolt"/> functions colored in <font color="green">**green**</font> if already implemented, in <font color="red">**red**</font> if planned but not yet implemented
+ - <i class="fa fa-calculator"/> stand-alone external programs in <font color="orange">**orange**</font>
+ - <i class="fa fa-database"/> online databases
+ - <i class="fa fa-info"/> individual additional information from other sources 
+ 
+## Flow Chart
+
+```{r}
+turnoveR::tor_show_package_structure(height = 1100)
+```
+
