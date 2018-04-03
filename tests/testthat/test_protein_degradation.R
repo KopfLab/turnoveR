@@ -4,8 +4,8 @@ test_that("Testing file quality", {
 
   #mockdataframe
   mock_data <- data_frame(
-    protein = c("6PGD", "7ABC", "6PGD"),
-    isopep = c("VLSGPQAQPAGDK", "LLSGPRD", "YAGHMPQFHSLY"),
+    prot_id = c("6PGD", "7ABC", "6PGD"),
+    peptide_seq = c("VLSGPQAQPAGDK", "LLSGPRD", "YAGHMPQFHSLY"),
     frac_lab = c(.5, .6, .5),
     hours = c(1, 0, 3))
 
@@ -14,10 +14,10 @@ test_that("Testing file quality", {
   expect_error(tor_calculate_label_rate(5), "wrong data type")
 
   #test that input data file is complete
-  expect_error(tor_calculate_label_rate(mock_data %>% select(-hours)), ".* does not exist") #add appropriate error messages
-  expect_error(tor_calculate_label_rate(mock_data %>% select(-protein)), ".* does not exist")
-  expect_error(tor_calculate_label_rate(mock_data %>% select(-isopep)), ".* does not exist")
-  expect_error(tor_calculate_label_rate(mock_data %>% select(-frac_lab)), ".* does not exist")
+  expect_error(tor_calculate_label_rate(mock_data %>% select(-hours)), "column.*not exist")
+  expect_error(tor_calculate_label_rate(mock_data %>% select(-prot_id)), "column.*not exist")
+  expect_error(tor_calculate_label_rate(mock_data %>% select(-peptide_seq)), "column.*not exist")
+  expect_error(tor_calculate_label_rate(mock_data %>% select(-frac_lab)), "column.*not exist")
 
   #mockdataframe2
   mock_data2 <- data_frame(
@@ -39,13 +39,13 @@ test_that("Testing file quality", {
 test_that("Testing protein labeling rate", {
 
   test_data <- data_frame(
-    protein = c("6PGD", "7ABC", "6PGD"),
+    prot_id = c("6PGD", "7ABC", "6PGD"),
     gene = c("6PGD1", "7ABC2", "6PGD3"),
-    isopep = c("VLSGPQAQPAGDK", "LLSGPRD", "YAGHMPQFHSLY"),
+    peptide_seq = c("VLSGPQAQPAGDK", "LLSGPRD", "YAGHMPQFHSLY"),
     frac_lab = c(.5, .6, .5),
     hours = c(1, 0, 3))
 
-  expect_message(output <- tor_calculate_label_rate(test_data), "proteins")
-  expect_message(tor_calculate_label_rate(test_data, combine_peptides = FALSE), "peptides")
+  expect_message(output <- tor_calculate_label_rate(test_data), "processing data for.*proteins")
+  expect_message(tor_calculate_label_rate(test_data, combine_peptides = FALSE), "processing data for.*peptides")
 
 })
