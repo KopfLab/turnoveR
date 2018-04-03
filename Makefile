@@ -5,6 +5,7 @@ all: docu check
 docu:
 	Rscript -e "devtools::document(roclets=c('rd', 'collate', 'namespace'))"
 	Rscript -e "pkgdown::build_site()"
+	git checkout docs/pkgdown.css
 
 check:
 	Rscript -e "devtools::check()"
