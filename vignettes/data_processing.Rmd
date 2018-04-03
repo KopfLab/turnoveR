@@ -333,8 +333,60 @@ Coming soon...
 
 The entire set of operations listed section-by-section above can also be easily performed in a single step piping (`%>%`) from one operation to the next.
 
-```{r}
-# Coming soon
+```{r "one-pipe", warning=FALSE, collapse=TRUE, fig.width=5, fig.height=4}
+# data base path
+path <- file.path("vignettes", "vignette_data")
+
+# growth params
+growth_params <- 
+  tor_calculate_growth_params(
+    flow_rate = 0.46 * 60, # [g/hour]
+    flow_rate_se = 0.02 * 60, # estimated error [g/hour]
+    volume = 894.4, # [g]
+    volume_se = 20 # estimated error [g]
+  )
+
+# data processing in one pipeline
+data_one_pipe <-
+  # read SVM file
+  tor_read_svm_data_file(
+    filepath = file.path(path, "svm_pred_results_0.03gr.csv")
+  ) %>% 
+  # spectral quality filtering
+  tor_filter_peptides_by_spectral_fit_quality(svm_pred > 0.75) %>% 
+  # recode protein ids
+  tor_recode_protein_ids(file.path(path, "rename_prot.xlsx")) %>% 
+  # add metadata
+  tor_add_metadata(
+    read_excel(file.path(path, "metadata_CMW.xlsx")), 
+    join_by = "sample"
+  ) %>% 
+  # calculate labeled fraction
+  tor_calculate_labeled_fraction() %>% 
+  # calculate the label rate
+  tor_calculate_label_rate(
+    time_col = "hours", 
+    min_num_timepoints = 3,
+    combine_peptides = TRUE
+  ) %>% 
+  # degradation rate and dissipation
+  tor_calculate_degradation_dissipation(
+    growth_rate = growth_params$growth_rate,
+    growth_rate_se = growth_params$growth_rate_se
+  ) %>% 
+  # focus on high quality fits
+  tor_filter_label_rate_fits(enough_data & fit_rse <= 0.05) %>% 
+  # add uniprot data
+  tor_add_uniprot_info(
+    tor_fetch_uniprot_proteins(taxon = 83333)
+  ) %>% 
+  # add protein count info
+  tor_add_protein_counts_info(
+    tor_read_protein_counts_data(file.path(path, "psms.csv"))
+  )
+
+# then continue with plotting and analysis
+data_one_pipe %>% tor_plot_label_rate_error() %>% ggplotly()
 ```
 
 
