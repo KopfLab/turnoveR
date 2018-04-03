@@ -30,6 +30,10 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
   tor_prep <-
     list(
       tor_function(
+        name = "tor_read_protein_counts_data",
+        tooltip = ""
+      ),
+      tor_function(
         name = "tor_filter_decoy",
         tooltip = "filters so that the DECOY proteins are > 1% of the total number of proteins identified",
         exists = FALSE
@@ -37,6 +41,10 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
       tor_function(
         name = "tor_read_svm_data_file",
         tooltip = "read in an SVM data file"
+      ),
+      tor_function(
+        name = "tor_recode_protein_ids",
+        tooltip = "recodes protein IDs that are no longer up to date with the recommended most commonly used protein abbreviations"
       ),
       tor_function(
         name = "tor_calculate_spectral_fit_quality",
@@ -60,9 +68,8 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
         tooltip = ""
       ),
       tor_function(
-        name = "tor_add_abundance_info",
-        tooltip = "adds the protein abundance information to the peptides including calculation of relative abundances by counts and by mass",
-        exists = FALSE
+        name = "tor_add_protein_counts_info",
+        tooltip = "adds the protein abundance information to the peptides including calculation of relative abundances by counts and by mass"
       ),
       tor_function(
         name = "tor_add_kegg_pathways_info",
@@ -106,7 +113,15 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
         tooltip = "calculates labeled fraction from 15N and 14N areas"
       ),
       tor_function(
+        name = "tor_calculate_growth_params",
+        tooltip = ""
+      ),
+      tor_function(
         name = "tor_calculate_degradation_dissipation",
+        tooltip = ""
+      ),
+      tor_function(
+        name = "tor_filter_label_rate_fits",
         tooltip = ""
       )
     )
@@ -179,12 +194,16 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
   ${prep_functions}
   metadata["fa:fa-file-excel-o metadata file (xlsx)"]
   metadata-->tor_add_metadata
-  psms-->tor_filter_decoy
+  protein_list["fa:fa-file-excel-o protein list (xlsx)"]
+  protein_list-->tor_recode_protein_ids
+  psms-->tor_read_protein_counts_data
+  tor_read_protein_counts_data-->tor_filter_decoy
   svm-->tor_read_svm_data_file
   tor_read_svm_data_file-->tor_filter_peptides_by_spectral_fit_quality
   iso-->tor_calculate_spectral_fit_quality
   tor_calculate_spectral_fit_quality-->tor_filter_peptides_by_spectral_fit_quality
-  tor_filter_peptides_by_spectral_fit_quality-->tor_add_metadata
+  tor_filter_peptides_by_spectral_fit_quality-->tor_recode_protein_ids
+  tor_recode_protein_ids-->tor_add_metadata
   end
 
   %% turnoverR calculations
@@ -193,18 +212,22 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
   tor_add_metadata-->tor_calculate_labeled_fraction
   tor_calculate_labeled_fraction-->tor_calculate_label_rate
   tor_calculate_label_rate-->tor_calculate_degradation_dissipation
-  growth_rate(("fa:fa-info growth rate"))
-  growth_rate-->tor_calculate_degradation_dissipation
+  flow_rate(("fa:fa-info flow rate"))
+  volume(("fa:fa-info volume"))
+  flow_rate-->tor_calculate_growth_params
+  volume-->tor_calculate_growth_params
+  tor_calculate_growth_params-->tor_calculate_degradation_dissipation
+  tor_calculate_degradation_dissipation-->tor_filter_label_rate_fits
   end
 
   %% turnoveR information
   subgraph turnoveR: information
   ${info_functions}
   tor_fetch_uniprot_proteins-->tor_add_uniprot_info
-  tor_calculate_degradation_dissipation-->tor_add_uniprot_info
-  tor_filter_decoy-->tor_add_abundance_info
-  tor_add_uniprot_info-->tor_add_abundance_info
-  tor_add_abundance_info-->tor_add_kegg_pathways_info
+  tor_filter_label_rate_fits-->tor_add_uniprot_info
+  tor_filter_decoy-->tor_add_protein_counts_info
+  tor_add_uniprot_info-->tor_add_protein_counts_info
+  tor_add_protein_counts_info-->tor_add_kegg_pathways_info
   tor_fetch_kegg_pathway_details-->tor_add_kegg_pathways_info
   reporting>"visualization & export (at any intermediate step)"]
   tor_add_kegg_pathways_info-->reporting
@@ -239,7 +262,7 @@ tor_show_package_structure <- function(height = NULL, width = height, ...) {
 
   %% node styles
   classDef files fill:#5eb9f9,stroke:#000,stroke-width:2px;
-  class mzXML,unknown,psms,iso,svm,protein_map,metadata,export files
+  class mzXML,unknown,psms,iso,svm,protein_map,metadata,export,protein_list files
   classDef programs fill:#ffa449,stroke:#000,stroke-width:2px;
   class XTST,massacre programs
   classDef functions fill:#b5e835,stroke:#000,stroke-width:2px;
