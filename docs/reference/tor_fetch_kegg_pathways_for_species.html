@@ -25,12 +25,12 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-  
-  
 <meta property="og:title" content="Fetch all KEGG pathways for a species — tor_fetch_kegg_pathways_for_species" />
 
 <meta property="og:description" content="Fetch all KEGG pathways for a species" />
 <meta name="twitter:card" content="summary" />
+
+
 <!-- mathjax -->
 <script src='https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
 
@@ -38,6 +38,8 @@
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
+
+
 
 
   </head>
@@ -53,12 +55,19 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">turnoveR</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="../index.html">turnoveR</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0.9000</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../articles/turnoveR_vignette.html">Data Processing</a>
+  <a href="../articles/flow.html">Flow Chart</a>
+</li>
+<li>
+  <a href="../articles/data_processing.html">Data Processing</a>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
@@ -73,6 +82,7 @@
   </a>
 </li>
       </ul>
+      
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
@@ -80,10 +90,11 @@
       
       </header>
 
-      <div class="row">
+<div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Fetch all KEGG pathways for a species</h1>
+    <small>Source: <a href='https://github.com/kopflab/turnoveR/blob/master/R/kegg.R'><code>R/kegg.R</code></a></small>
     </div>
 
     
@@ -91,9 +102,9 @@
     
 
     <pre class="usage"><span class='fu'>tor_fetch_kegg_pathways_for_species</span>(<span class='kw'>org_id</span> <span class='kw'>=</span> <span class='fu'>find_by_species_name</span>(),
-  <span class='kw'>species_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+  <span class='kw'>species_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a> Arguments</h2>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
@@ -129,5 +140,8 @@
       </footer>
    </div>
 
+  
+
   </body>
 </html>
+

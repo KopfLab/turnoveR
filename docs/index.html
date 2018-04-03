@@ -18,7 +18,7 @@
 <![endif]-->
 </head>
 <body>
-    <div class="container template-vignette">
+    <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
     <div class="navbar-header">
@@ -27,12 +27,19 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">turnoveR</a>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="index.html">turnoveR</a>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0.9000</span>
+      </span>
     </div>
+
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
-  <a href="articles/turnoveR_vignette.html">Data Processing</a>
+  <a href="articles/flow.html">Flow Chart</a>
+</li>
+<li>
+  <a href="articles/data_processing.html">Data Processing</a>
 </li>
 <li>
   <a href="reference/index.html">Reference</a>
@@ -55,12 +62,11 @@
 
       
       </header><div class="row">
-  <div class="col-md-9">
+  <div class="col-md-9 contents">
     
 
     
     
-<div class="contents">
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <div id="turnover" class="section level1">
 
@@ -80,37 +86,46 @@ devtools<span class="op">::</span><span class="kw"><a href="http://www.rdocument
 <div id="functionality" class="section level2">
 <h2 class="hasAnchor">
 <a href="#functionality" class="anchor"></a>Functionality</h2>
-<p>For a full reference of all functions, see the <a href="https://kopflab.github.io/turnoveR/reference/">documentation</a>. For an example of how to use the turnoveR package, see the vignette on <a href="https://kopflab.github.io/turnoveR/articles/turnoveR_vignette.html">turnoveR Data Processing</a>.</p>
-</div>
+<p>For a full reference of all functions, see the <a href="https://kopflab.github.io/turnoveR/reference/">documentation</a>. For an example of how to use the turnoveR package, see the vignette on <a href="https://kopflab.github.io/turnoveR/articles/data_processing.html">Data Processing</a>. For an overview of the package structure and available functions, see the vignette on <a href="https://kopflab.github.io/turnoveR/articles/flow.html">Package Structure</a></p>
 </div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2 class="hasAnchor">
-<a href="#sidebar" class="anchor"></a>Links</h2>
+    <div class="links">
+<h2>Links</h2>
 <ul class="list-unstyled">
 <li>Browse source code at <br><a href="https://github.com/kopflab/turnoveR">https://​github.com/​kopflab/​turnoveR</a>
 </li>
 <li>Report a bug at <br><a href="https://github.com/kopflab/turnoveR/issues">https://​github.com/​kopflab/​turnoveR/​issues</a>
 </li>
 </ul>
+</div>
+<div class="license">
 <h2>License</h2>
-<p><a href="https://opensource.org/licenses/mit-license.php">MIT</a></p>
+<ul class="list-unstyled">
+<li><a href="https://opensource.org/licenses/mit-license.php">MIT</a></li>
+</ul>
+</div>
+<div class="developers">
 <h2>Developers</h2>
 <ul class="list-unstyled">
-<li>Corinne Walsh <br><small class="roles"> Author, maintainer </small> </li>
-<li>Sebastian Kopf <br><small class="roles"> Author </small> </li>
+<li>Corinne Walsh <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Sebastian Kopf <br><small class="roles"> Author </small>  </li>
 </ul>
+</div>
+
+      <div class="dev-status">
 <h2>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://cran.r-project.org/package=turnoveR"><img src="http://www.r-pkg.org/badges/version/turnoveR" alt="CRAN_Status_Badge"></a></li>
-<li><a href="/commits"><img src="https://img.shields.io/badge/GitHub-0.1.0.9000-orange.svg?style=flat-square" alt="Git_Hub_Version"></a></li>
-<li><a href="/commits"><img src="https://img.shields.io/badge/updated-2018--03--29-yellowgreen.svg" alt="Last-Update"></a></li>
+<li><a href="/commits"><img src="https://img.shields.io/badge/GitHub-0.2.0.9000-orange.svg?style=flat-square" alt="Git_Hub_Version"></a></li>
+<li><a href="/commits"><img src="https://img.shields.io/badge/updated-2018--04--02-yellowgreen.svg" alt="Last-Update"></a></li>
 <li><a href="https://kopflab.github.io/turnoveR/reference/"><img src="https://img.shields.io/badge/docs-online-green.svg" alt="Documentation"></a></li>
 <li><a href="https://travis-ci.org/KopfLab/turnoveR"><img src="https://travis-ci.org/KopfLab/turnoveR.svg?branch=master" alt="Build Status"></a></li>
 <li><a href="https://ci.appveyor.com/project/KopfLab/turnoveR"><img src="https://ci.appveyor.com/api/projects/status/github/KopfLab/turnoveR?branch=master&amp;svg=true" alt="AppVeyor Build Status"></a></li>
 </ul>
+</div>
 </div>
 
 </div>
@@ -126,6 +141,8 @@ devtools<span class="op">::</span><span class="kw"><a href="http://www.rdocument
 
       </footer>
 </div>
+
+  
 
   </body>
 </html>

@@ -150,7 +150,7 @@ a.anchor {
 /* Nice scrolling for wide elements --------------------------------------- */
 
 table {
-  //display: block; // this interferes with the paged table
+  display: block;
   overflow: auto;
 }
 

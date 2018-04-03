@@ -3,11 +3,14 @@ title: "turnoveR: Data Processing"
 output:
   html_document:
     df_print: paged
+    toc: true
+    toc_float: true
+    toc_depth: 3
 ---
 
 ```{r, include=FALSE}
 # set global knitr options
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(comment = "#>")
 knitr::opts_knit$set(root.dir = "..")
 ```
 
@@ -60,7 +63,7 @@ path <- file.path("vignettes", "vignette_data")
 
 One way to get started is to load in an SVM data files. This pre-processed proteomics data (supported vector machine - SVM - evaluated spectral output from Massacre) is read in through the function `tor_read_svm_data_file`. Note that some of the column names are standardized upon data loading for compatibility with downstream processing. Also note that most functions provide a quick summary message of what is happening. If descired, this can be turned off by specifying `quiet = TRUE` in each function call.
 
-```{r results='hide'}
+```{r results='hide', warning=FALSE}
 svm_data <- 
   # read svm data file
   tor_read_svm_data_file(
@@ -139,7 +142,7 @@ The calculated labeling rates can then be used to calculate degradation rates an
 For this last step, it is critical to know the growth rate of the experiment. The growth rate can be calculated using the culture volume and media flow rate and turnoveR provides the `tor_calculate_growth_params` function to simplify this step. 
 
 
-```{r, eval=1:3}
+```{r}
 # calculate growth parameters
 growth_params <- 
   tor_calculate_growth_params(
@@ -149,7 +152,9 @@ growth_params <-
     volume_se = 20 # estimated error [g]
   )
 growth_params %>% rmarkdown::paged_table()
+```
 
+```{r results='hide'}
 # data calculations
 data_w_calcs <- 
   data_w_metadata %>% 
@@ -167,12 +172,12 @@ data_w_calcs <-
 
 
 # show results (remove complex data column for printout)
-data_w_calcs %>% tor_remove_list_columns()
+data_w_calcs 
 ```
 
 ```{r echo=FALSE}
 # for online docu
-data_w_calcs %>% tor_remove_list_columns() %>% rmarkdown::paged_table()
+data_w_calcs %>% rmarkdown::paged_table()
 ```
 
 ## Visualization
@@ -205,14 +210,17 @@ Let's take a look at some of the proteins that did not have enough data for a fi
 
 ```{r results='hide'}
 # show all records that don't have enough data
-data_w_calcs %>% tor_filter_label_rate_fits(!enough_data)
+data_w_calcs %>% 
+  tor_filter_label_rate_fits(!enough_data) 
 ```
 
-```{r echo=FALSE}
-data_w_calcs %>% tor_filter_label_rate_fits(!enough_data) %>% rmarkdown::paged_table()
+```{r echo=FALSE, message=FALSE}
+data_w_calcs %>% 
+  tor_filter_label_rate_fits(!enough_data) %>% 
+  rmarkdown::paged_table()
 ```
 
-```{r}
+```{r, fig.width=10, fig.height=8}
 # visualize some of these problematic records
 data_w_calcs %>% 
   tor_filter_label_rate_fits(!enough_data) %>% 
@@ -232,7 +240,7 @@ data_w_calcs %>%
 
 This could likewise be used with `tor_plot_labeling_curves`, which reveals a little more detail about wy the quality is bad (and potentially allows reconsidering the exclusion or closer examination of some peptides that behave clearly differently from the rest of the protein). Use the mouseover to see the peptide sequences for each data point.
 
-```{r}
+```{r fig.width=10, fig.height=8}
 data_w_calcs %>% 
   tor_filter_label_rate_fits(fit_rse > 0.05) %>% 
   tor_plot_labeling_curves(random_seed = 11) %>% 
@@ -302,7 +310,7 @@ data_w_uniprot %>% filter(missing_uniprot) %>% rmarkdown::paged_table()
 
 The `protein_sums.csv` or `psms.csv` file should contain the protein IDs and corresponding counts for all proteins identified in each sample and is read by `tor_read_protein_counts_data` in csv format and then added to the data set using `tor_add_protein_counts_info`, which also calculates the relative protein counts, relative protein mass (based on the molecular weight of each protein retrieved from uniprot in the previous step). The relative protein abundance information can be combined with the dissipation and degradation values to calculate a weighted degradation and dissipation rate for each protein. This weighted calculation uses the relative mass of each protein identified in the samples to better describe overall cellular investment in protein turnover for each protein.
 
-```{r, results='hide'}
+```{r}
 # read protein count info
 protein_count <- tor_read_protein_counts_data(file.path(path, "psms.csv"))
 
@@ -311,13 +319,6 @@ data_w_counts <- data_w_uniprot %>%
   tor_add_protein_counts_info(protein_count)
 
 # look at some of the data
-data_w_counts %>% 
-  select(gene, prot_name, prot_rel_mass, starts_with("deg"), starts_with("diss")) %>% 
-  head(10)
-```
-
-```{r, echo=FALSE}
-# for online docu
 data_w_counts %>% 
   select(gene, prot_name, prot_rel_mass, starts_with("deg"), starts_with("diss")) %>% 
   head(10) %>% 
@@ -343,17 +344,8 @@ The entire set of operations listed section-by-section above can also be easily 
 
 To take a quick first look at the important proteins contributing to protein turnover, it is helpful to list the proteins with the highest weighted degradation rates / dissipation in the experiment. For a list of the most turned over proteins (regardless of pool size), one would look at the hightest dissipation instead.
 
-```{r results='hide'}
+```{r}
 # get the total degradation and dissipation per generation
-data_w_counts %>% 
-  summarize(
-    total_deg_rate = sum(deg_rate_weighted, na.rm = TRUE),
-    total_dissipation = sum(dissipation_weighted, na.rm = TRUE)
-  )
-```
-
-```{r, echo=FALSE}
-# online docu
 data_w_counts %>% 
   summarize(
     total_deg_rate = sum(deg_rate_weighted, na.rm = TRUE),
@@ -366,6 +358,7 @@ data_w_counts %>%
 # list top proteins by dissipation
 data_w_counts %>% 
   arrange(desc(dissipation)) %>% 
+  select(prot_name, everything()) %>% 
   head(20)
 ```
 
@@ -373,6 +366,7 @@ data_w_counts %>%
 # online docu
 data_w_counts %>% 
   arrange(desc(dissipation)) %>% 
+  select(prot_name, everything()) %>% 
   head(20) %>% 
   rmarkdown::paged_table()
 ```
@@ -381,6 +375,7 @@ data_w_counts %>%
 # list top proteins by relative mass
 data_w_counts %>% 
   arrange(desc(prot_rel_mass)) %>% 
+  select(prot_name, everything()) %>% 
   head(20)
 ```
 
@@ -388,6 +383,7 @@ data_w_counts %>%
 # online docu
 data_w_counts %>% 
   arrange(desc(prot_rel_mass)) %>% 
+  select(prot_name, everything()) %>% 
   head(20) %>% 
   rmarkdown::paged_table()
 ```
@@ -397,6 +393,7 @@ data_w_counts %>%
 # list top proteins by dissipation
 data_w_counts %>% 
   arrange(desc(dissipation_weighted)) %>% 
+  select(prot_name, everything()) %>% 
   head(20)
 ```
 
@@ -404,6 +401,7 @@ data_w_counts %>%
 # online docu
 data_w_counts %>% 
   arrange(desc(dissipation_weighted)) %>% 
+  select(prot_name, everything()) %>% 
   head(20) %>% 
   rmarkdown::paged_table()
 ```

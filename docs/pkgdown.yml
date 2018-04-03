@@ -1,7 +1,11 @@
+pandoc: 1.19.2.1
+pkgdown: 0.1.0.9000
+pkgdown_sha: 7d8b4882c4eb650f0f869a618f5c445c657313f0
+articles:
+  analysis_demo: analysis_demo.html
+  data_processing: data_processing.html
+  flow: flow.html
 urls:
   reference: http://turnover.kopflab.org/reference
   article: http://turnover.kopflab.org/articles
-articles:
-  analysis_demo: analysis_demo.html
-  turnoveR_vignette: turnoveR_vignette.html
 
