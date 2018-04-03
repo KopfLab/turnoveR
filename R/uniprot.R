@@ -1,4 +1,40 @@
 
+#' Add uniprot information
+#'
+#' @export
+tor_add_uniprot_info <- function(data, uniprot_data, quiet = FALSE) {
+
+  if (missing(data)) stop("no data frame supplied", call. = FALSE)
+  if (missing(uniprot_data)) stop("no uniprot data supplied, use tor_fetch_uniprot_proteins", call. = FALSE)
+
+  if ("uniprot_id" %in% names(data) && "uniprot_id" %in% names(data)) {
+    join_by <- "uniprot_id"
+    if ("prot_id" %in% names(data)) {
+      # if prot id is in the dataset, don't take it from uniprot
+      uniprot_data <- select(uniprot_data, -prot_id)
+    }
+  } else if ("prot_id" %in% names(data) && "prot_id" %in% names(data)) {
+    join_by <- "prot_id"
+  } else
+    stop("don't know what to join these data by, missing uniprot_id and prot_id", call. = FALSE)
+
+  if (!quiet)
+    glue("Info: adding uniprot information to mass spec data, joining by '{join_by}'...") %>%
+      message(appendLF = FALSE)
+
+  # combine
+  data_combined <-
+    right_join(uniprot_data, data, by = join_by) %>%
+    mutate(missing_uniprot = is.na(prot_name))
+
+  # info
+  if (!quiet)
+    glue("{nrow(filter(data_combined, !missing_uniprot))} records joined successfully, ",
+         "{nrow(filter(data_combined, missing_uniprot))} could not be matched with uniprot records") %>%
+    message()
+
+  return(data_combined)
+}
 
 #' Fetch uniprot species
 #'
@@ -62,7 +98,7 @@ tor_fetch_uniprot_proteins <- function(taxon, read_cache = TRUE, cache_dir = "ca
 PREFIX up:<http://purl.uniprot.org/core/>
 PREFIX taxon:<http://purl.uniprot.org/taxonomy/>
 PREFIX skos:<http://www.w3.org/2004/02/skos/core#>
-SELECT ?prot_id, ?uniprot_id, ?prot_name, ?gene, ?mass
+SELECT ?prot_id, ?uniprot_id, ?gene, ?prot_name, ?prot_mw
 WHERE {
   	?protein a up:Protein .
     # organism filter
@@ -84,7 +120,7 @@ WHERE {
     ##   ?protein up:sequence/rdf:value ?seq .
     # protein mass in Da
     ?protein up:sequence/up:mass ?mass_int .
-    BIND(STR(?mass_int) AS ?mass) .
+    BIND(STR(?mass_int) AS ?prot_mw) .
     # protein id
   	BIND (STRAFTER(STR(?protein),"uniprot/") AS ?uniprot_id) .
     ## maybe: metacyc (if available)
@@ -109,9 +145,9 @@ WHERE {
     col_types = cols(
       prot_id = col_character(),
       uniprot_id = col_character(),
-      prot_name = col_character(),
       gene = col_character(),
-      mass = col_integer()
+      prot_name = col_character(),
+      prot_mw = col_integer()
     ),
     quiet = quiet)
 
@@ -179,16 +215,27 @@ run_uniprot_csv_query <- function(query, message = NULL,
         message()
     }
 
-  } else if (!quiet) {
-    # info about cache
-    if (!is.null(message))
-      glue("Info: reading uniprot {message} from cached file '{cache_path}'... ") %>%
-      message()
-    else
-      glue("Info: reading uniprot data from cached file '{cache_path}'... ") %>%
-      message()
+    data <- read_csv(cache_path, ...)
+
+  } else {
+    # read from cache
+    if (!quiet) {
+      if (!is.null(message))
+        glue("Info: reading uniprot {message} from cached file ",
+             "(use read_cache = FALSE to disable)... ") %>%
+        message(appendLF = FALSE)
+      else
+        glue("Info: reading uniprot data from cached file ",
+             "(use read_cache = FALSE to disable)... ") %>%
+        message(appendLF = FALSE)
+    }
+
+    data <- read_csv(cache_path, ...)
+
+    if (!quiet)
+      glue("retrieved {nrow(data)} records") %>% message()
   }
 
-  read_csv(cache_path, ...)
+  return(data)
 }
 
