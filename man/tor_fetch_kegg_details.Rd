@@ -4,7 +4,8 @@
 \alias{tor_fetch_kegg_details}
 \title{Fetch KEGG details}
 \usage{
-tor_fetch_kegg_details(kegg_id, unnest_single_values = TRUE, ...)
+tor_fetch_kegg_details(kegg_id, unnest_single_values = TRUE, ...,
+  quiet = FALSE)
 }
 \arguments{
 \item{kegg_id}{one or more KEGG identifiers. Can only do 10 requests at a time (see \link[KEGGREST]{keggGet}) so if there are more than 10, splits up into multiple queries.}

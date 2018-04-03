@@ -4,7 +4,8 @@
 \alias{tor_calculate_degradation_dissipation}
 \title{Calculate degradation rate}
 \usage{
-tor_calculate_degradation_dissipation(data, growth_rate, growth_rate_se = 0)
+tor_calculate_degradation_dissipation(data, growth_rate, growth_rate_se = 0,
+  quiet = FALSE)
 }
 \arguments{
 \item{data}{data with label rate calculated}
@@ -14,5 +15,5 @@ tor_calculate_degradation_dissipation(data, growth_rate, growth_rate_se = 0)
 \item{growth_rate_se}{standard error of growth rate from experiment}
 }
 \description{
-Calculate degradataion and dissipation, including propagated error.
+Calculate degradataion and dissipation, including propagated error. Protein degradation is calculated as the labeling rate minus the growth rate (deg_rate = label_rate - growth_rate). Protein dissipation is calculated as the degradation rate divided by the labeling rate, and is displayed as a percent (dissipation = (deg_rate / label_rate)*100).
 }

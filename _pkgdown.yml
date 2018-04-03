@@ -3,6 +3,7 @@ url: http://turnover.kopflab.org
 template:
   params:
     bootswatch: simplex
+    toc_float: true
 
 home:
   strip_header: true
@@ -11,8 +12,10 @@ navbar:
   title: turnoveR
   type: default
   left:
+  - text: "Flow Chart"
+    href: articles/flow.html
   - text: "Data Processing"
-    href: articles/turnoveR_vignette.html
+    href: articles/data_processing.html
   - text: "Reference"
     href: reference/index.html
   right:
@@ -26,8 +29,8 @@ reference:
     General data processing functions.
   contents:
   - matches("svm")
-  - tor_rename_proteins
-  - tor_filter_peptides_by_spectral_fit
+  - tor_recode_protein_ids
+  - tor_filter_peptides_by_spectral_fit_quality
 - title: Calculation functions
   desc: >
     Functions to perform calculations on protein turnover data.

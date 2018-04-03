@@ -4,14 +4,16 @@
 \alias{tor_calculate_labeled_fraction}
 \title{Calculate labeled fraction}
 \usage{
-tor_calculate_labeled_fraction(data)
+tor_calculate_labeled_fraction(data, unlabeled_col = "amp_ulab",
+  labeled_col = "amp_lab", quiet = FALSE)
 }
 \arguments{
-\item{filtered_data}{the filtered svm data}
+\item{data}{the dataset}
+
+\item{unlabeled_col}{the unlabeled singal column}
+
+\item{labeled_col}{the labeled signal column}
 }
 \description{
-Calculate fraclab, add to metadata(replace excel step 11)
-}
-\details{
 Cacluated the labeled and unlabaled fraction based on labeld and unlabeld amplitudes.
 }

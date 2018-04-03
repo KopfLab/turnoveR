@@ -4,8 +4,11 @@
 \alias{tor_fetch_uniprot_proteins}
 \title{Fetch uniprot information}
 \usage{
-tor_fetch_uniprot_proteins(taxon = 83333, read_cache = TRUE,
-  cache_dir = "cache")
+tor_fetch_uniprot_proteins(taxon, read_cache = TRUE, cache_dir = "cache",
+  quiet = FALSE)
+}
+\arguments{
+\item{taxon}{the ID of the species}
 }
 \description{
 Fetch uniprot information

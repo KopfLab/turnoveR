@@ -4,13 +4,33 @@
 \alias{tor_calculate_label_rate}
 \title{Calculate protein or peptide labeling rate}
 \usage{
-tor_calculate_label_rate(data, combine_peptides = TRUE, quiet = FALSE)
+tor_calculate_label_rate(data, time_col = "hours", min_num_timepoints = 2,
+  combine_peptides = TRUE, quiet = FALSE)
 }
 \arguments{
-\item{data}{the svm_data with fraclab/fraculab calculated \link{tor_calculate_labeled_fraction}}
+\item{data}{the data with frac_lab/frac_ulab calculated (\link{tor_calculate_labeled_fraction})}
 
-\item{max_label}{amount of maximum label on scale 0-1 (1 = 100\% label)}
+\item{time_col}{the name of the column that holds the time, assumes "hours" by default.}
+
+\item{min_num_timepoints}{what is the minimum number of time points to try to fit a curve? 0 time point do not count towards making this minimum}
+
+\item{combine_peptides}{whether to combine all peptides for a fit (i.e. fit the whole protein), or to calculate a fit for each peptide. Default is to combine across peptides.}
+}
+\value{
+data frame with one line for each peptide or protein (depending on \code{combine_peptides}) and the following added columns:
+\itemize{
+\item{\code{nested_data}: }{all the data for the protein or peptide}
+\item{\code{num_peptides}: }{the number of peptides combined for each protein (always 1 if \code{combine_peptides = FALSE})}
+\item{\code{num_timepoints}: }{the number of unique time points that went into each fit - does not include any 0 time points}
+\item{\code{num_datapoints}: }{the number of individual data points that went into each fit}
+\item{\code{enough_data}: }{whether there was enough data to fit a curve at all - i.e. whether there were at least 2 time points}
+\item{\code{fit_error}: }{whether the non-linear squares fit succeeded or failed}
+\item{\code{label_rate}: }{the estimated label rate, in units of reciprocal time depending on the \code{time_col}}
+\item{\code{label_rate_se}: }{the standard error of the estimated label rate based on the least squares fit}
+\item{\code{fit_rse}: }{the residual standard error of the fit}
+\item{\code{fit}: }{the actual regression model fit}
+}
 }
 \description{
-Calculate protein or peptide labeling rate from svm_data (fit each peptide to exponential equation y = Ae^dx)
+Calculate protein or peptide labeling rate by non-linear least squares fitting to exponential equation \eqn{f_{labeled} = 1 - e^{-k\cdot t}} where \eqn{k} is the protein/peptide labeling rate (in units of reciprocal time, depending on what the time column is recorded in). Forces fit through the origin (i.e. assumes no labeling at time point 0) and thus explicitly ignores 0 time points.
 }

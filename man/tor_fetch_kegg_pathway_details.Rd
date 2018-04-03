@@ -4,7 +4,7 @@
 \alias{tor_fetch_kegg_pathway_details}
 \title{Fetch KEGG pathway details}
 \usage{
-tor_fetch_kegg_pathway_details(pathways)
+tor_fetch_kegg_pathway_details(pathways, quiet = FALSE)
 }
 \arguments{
 \item{pathways}{data frame with column kegg_pathway_id}

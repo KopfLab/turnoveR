@@ -2,17 +2,22 @@
 % Please edit documentation in R/visualization.R
 \name{tor_plot_labeling_curves}
 \alias{tor_plot_labeling_curves}
-\title{plot disippation curves}
+\title{Plot labeling curves}
 \usage{
-tor_plot_labeling_curves(data, grouping = protein, plot_number = 6)
+tor_plot_labeling_curves(data, grouping = protein, time_col = "hours",
+  plot_number = 6, random_seed = random())
 }
 \arguments{
 \item{data}{data with label rate (and error), growth rate (and error)}
 
 \item{grouping}{by protein or peptide for visualization ??}
 
-\item{plot_number}{designate number of curves you want to see}
+\item{time_col}{the name of the column that holds the time, assumes "hours" by default.}
+
+\item{plot_number}{designate the maximum number of curves you want to plot. Use \code{plot_number = NULL} to plot all - be careful with this option, the plot might take a long time to render with a larger number of proteins or peptides.}
+
+\item{random_seed}{specify this to get reproducible selection of "random" plots}
 }
 \description{
-visualuze the dissipation curve of peptides or proteins
+Visualizes the labeling fits for peptides or proteins. Selects a random subset from the provided data and plots a maximum of \code{plot_number} of plots.
 }

@@ -4,7 +4,7 @@
 \alias{tor_read_svm_data_file}
 \title{Read SVM data file}
 \usage{
-tor_read_svm_data_file(filepath)
+tor_read_svm_data_file(filepath, quiet = FALSE)
 }
 \arguments{
 \item{filepath}{the path to the svm data file}
@@ -13,5 +13,5 @@ tor_read_svm_data_file(filepath)
 data_frame with the read data
 }
 \description{
-This functions reads the data file
+This functions reads SVM preprocessed data files and selects the most important information
 }

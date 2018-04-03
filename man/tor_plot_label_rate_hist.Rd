@@ -10,5 +10,5 @@ tor_plot_label_rate_hist(data)
 \item{data}{data with label rate calculated, including growth rate}
 }
 \description{
-creates histogram of labeing rate
+Plots the label rate histogram together with the growth rate as a reference point. Supports plotting of multiple datasets by coloring according to growth rate.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualization.R
 \name{tor_plot_label_rate_error}
 \alias{tor_plot_label_rate_error}
-\title{plot label rate error}
+\title{Plot label rate error}
 \usage{
 tor_plot_label_rate_error(data)
 }
@@ -10,5 +10,5 @@ tor_plot_label_rate_error(data)
 \item{data}{data with label rate calculated, including growth rate standard errors}
 }
 \description{
-visualize the label rate and residual standard error
+Visualize the label rate and residual standard error. Displays the residual standard error (i.e. the normalized error of the fit) for each calculated label rate to easily evaluate what quality cutoffs might be useful. Plots the growth rate as a reference and the individual standard errors of the parameters from the fit. Supports plotting of multiple datasets by coloring according to growth rate.
 }

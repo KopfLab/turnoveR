@@ -4,7 +4,7 @@
 \alias{tor_fetch_kegg_species}
 \title{Fetch KEGG species}
 \usage{
-tor_fetch_kegg_species()
+tor_fetch_kegg_species(quiet = FALSE)
 }
 \description{
 Fetch KEGG species

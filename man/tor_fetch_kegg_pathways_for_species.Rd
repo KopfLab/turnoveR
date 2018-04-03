@@ -5,7 +5,7 @@
 \title{Fetch all KEGG pathways for a species}
 \usage{
 tor_fetch_kegg_pathways_for_species(org_id = find_by_species_name(),
-  species_name = NULL)
+  species_name = NULL, quiet = FALSE)
 }
 \arguments{
 \item{org_id}{KEGG organism code (typically 3-4 characters), if not provided, will be searched based on \code{species_name} using \link{tor_fetch_kegg_species}}
