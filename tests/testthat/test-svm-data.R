@@ -9,33 +9,34 @@ test_that("Testing read functions", {
   expect_equal(nrow(svm_data), 101721)
 
   # check for warnings in a bad test file
-  expect_warning(tor_read_svm_data_file(file.path("test_data", "svm_pred_results_bad.csv")), "don't match the column names")
+  expect_error(
+    suppressWarnings(tor_read_svm_data_file(file.path("test_data", "svm_pred_results_bad.csv"))),
+    "missing column")
 })
 
 
 test_that("SVM processiong works", {
 
-  expect_error(tor_filter_peptides_by_spectral_fit())
-  expect_error(tor_filter_peptides_by_spectral_fit(5), "wrong data type")
+  expect_error(tor_filter_peptides_by_spectral_fit_quality())
+  expect_error(tor_filter_peptides_by_spectral_fit_quality(5), "wrong data type")
 
 })
 
 test_that("Renaming proteins works", {
 
   # make sure errors are thrown
-  expect_error(tor_rename_proteins())
-  expect_error(tor_rename_proteins(5), "wrong data type")
-  expect_error(tor_rename_proteins(data_frame(x=1)), "column .* does not exist")
-  expect_error(tor_rename_proteins(data_frame(prot=1), prot_col = "my_protein"), "column .* does not exist")
-  expect_error(tor_rename_proteins(data_frame(prot=1)), "mapping text file.* is required")
-  expect_error(tor_rename_proteins(data_frame(prot=1), renaming_protein_map_file = "DNE"))
-  expect_error(tor_rename_proteins(data_frame(prot = 1), file.path("test_data", "rename_prot_bad.xlsx")), "column .* does not exist")
+  expect_error(tor_recode_protein_ids())
+  expect_error(tor_recode_protein_ids(5), "wrong data type")
+  expect_error(tor_recode_protein_ids(data_frame(x=1)), "column .* does not exist")
+  expect_error(tor_recode_protein_ids(data_frame(prot_id=1), prot_col = "my_protein"), "column .* does not exist")
+  expect_error(tor_recode_protein_ids(data_frame(prot_id=1)), "mapping text file.* is required")
+  expect_error(tor_recode_protein_ids(data_frame(prot_id=1), renaming_protein_map_file = "DNE"))
+  expect_error(tor_recode_protein_ids(data_frame(prot_id = 1), file.path("test_data", "rename_prot_bad.xlsx")), "column .* does not exist")
 
   # test specific data
-  my_test_data <- data_frame(prot = c("Q1PI83:KAD", "Q1PI83:KAD", "OTHER"))
-  expect_message(result <- tor_rename_proteins(my_test_data, file.path("test_data", "rename_prot.xlsx")), "2 protein .* 1 different")
-  expect_equal(result, data_frame(prot = c("KAD", "KAD", "OTHER")))
-
+  my_test_data <- data_frame(prot_id = c("Q1PI83:KAD", "Q1PI83:KAD", "OTHER"))
+  expect_message(result <- tor_recode_protein_ids(my_test_data, file.path("test_data", "rename_prot.xlsx")), "2 protein .* 1 different")
+  expect_equal(result, data_frame(prot_id = c("KAD", "KAD", "OTHER")))
 })
 
 #tests for "tor_calculate_labeled_fraction" function
