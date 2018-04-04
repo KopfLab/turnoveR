@@ -49,4 +49,5 @@ vignettes/*.pdf
 # documentations
 !/docs/*
 !/docs/articles/*.html
+!/docs/reference/*.html
 !/docs/articles/**/*.png

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Filter data based on number of timepoints where the peptide is identified — filter_min_timepoints • turnoveR</title>
+<title>Add uniprot information — tor_add_uniprot_info • turnoveR</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -25,9 +25,9 @@
 <link href="../pkgdown.css" rel="stylesheet">
 <script src="../jquery.sticky-kit.min.js"></script>
 <script src="../pkgdown.js"></script>
-<meta property="og:title" content="Filter data based on number of timepoints where the peptide is identified — filter_min_timepoints" />
+<meta property="og:title" content="Add uniprot information — tor_add_uniprot_info" />
 
-<meta property="og:description" content="(Step 11 in workflow)" />
+<meta property="og:description" content="Add uniprot information" />
 <meta name="twitter:card" content="summary" />
 
 
@@ -57,7 +57,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">turnoveR</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0.9000</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.1.9000</span>
       </span>
     </div>
 
@@ -93,35 +93,21 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Filter data based on number of timepoints where the peptide is identified</h1>
-    <small>Source: <a href='https://github.com/kopflab/turnoveR/blob/master/R/svm_data.R'><code>R/svm_data.R</code></a></small>
+    <h1>Add uniprot information</h1>
+    <small>Source: <a href='https://github.com/kopflab/turnoveR/blob/master/R/uniprot.R'><code>R/uniprot.R</code></a></small>
     </div>
 
     
-    <p>(Step 11 in workflow)</p>
+    <p>Add uniprot information</p>
     
 
-    <pre class="usage"><span class='fu'>filter_min_timepoints</span>(<span class='no'>data</span>, <span class='kw'>min_timepoint_present</span> <span class='kw'>=</span> <span class='fl'>3</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
-    
-    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
-    <table class="ref-arguments">
-    <colgroup><col class="name" /><col class="desc" /></colgroup>
-    <tr>
-      <th>data</th>
-      <td><p>the data to be filtered</p></td>
-    </tr>
-    <tr>
-      <th>min</th>
-      <td><p>number of timepoints present</p></td>
-    </tr>
-    </table>
-    
+    <pre class="usage"><span class='fu'>tor_add_uniprot_info</span>(<span class='no'>data</span>, <span class='no'>uniprot_data</span>, <span class='kw'>quiet</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+        
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#arguments">Arguments</a></li>
                 </ul>
 
   </div>
