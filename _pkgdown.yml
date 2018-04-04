@@ -24,26 +24,37 @@ navbar:
 
 
 reference:
-- title: Data processing
+- title: Data reading and preparation
   desc: >
-    General data processing functions.
+    General data reading and preparation functions.
   contents:
-  - matches("svm")
+  - matches("tor_read_")
+  - matches("tor_filter_")
   - tor_recode_protein_ids
-  - tor_filter_peptides_by_spectral_fit_quality
+- title: Information functions
+  desc: >
+    Functions that add additional information to the dataset.
+  contents:
+  - matches("tor_add_")
 - title: Calculation functions
   desc: >
     Functions to perform calculations on protein turnover data.
   contents:
-  - matches("calculate")
+  - matches("tor_calculate_")
 - title: Visualization functions
   desc: >
     Functions to visualize the data.
   contents:
-  - matches("plot")
+  - matches("tor_plot")
 - title: Protein database functions
   desc: >
     Functions to fetch information from protein databases.
   contents:
-  - matches("kegg")
-  - matches("uniprot")
+  - matches("fetch_kegg_")
+  - matches("fetch_uniprot_")
+- title: Utility functions
+  desc: >
+    Miscellaneous utility functions
+  contents:
+    - tor_remove_list_columns
+    - tor_show_package_structure

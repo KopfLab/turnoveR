@@ -54,7 +54,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">turnoveR</a>
-        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.0.9000</span>
+        <span class="label label-default" data-toggle="tooltip" data-placement="bottom" title="Released package">0.2.1.9000</span>
       </span>
     </div>
 
@@ -103,11 +103,17 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-data-processing" class="hasAnchor"><a href="#section-data-processing" class="anchor"></a>Data processing</h2>
-          <p class="section-desc"><p>General data processing functions.</p></p>
+          <h2 id="section-data-reading-and-preparation" class="hasAnchor"><a href="#section-data-reading-and-preparation" class="anchor"></a>Data reading and preparation</h2>
+          <p class="section-desc"><p>General data reading and preparation functions.</p></p>
         </th>
       </tr>
       <tr>
+        <!--  -->
+        <td>
+          <p><code><a href="tor_read_protein_counts_data.html">tor_read_protein_counts_data()</a></code> </p>
+        </td>
+        <td><p>Read protein counts data</p></td>
+      </tr><tr>
         <!--  -->
         <td>
           <p><code><a href="tor_read_svm_data_file.html">tor_read_svm_data_file()</a></code> </p>
@@ -116,15 +122,47 @@
       </tr><tr>
         <!--  -->
         <td>
-          <p><code><a href="tor_recode_protein_ids.html">tor_recode_protein_ids()</a></code> </p>
+          <p><code><a href="tor_filter_label_rate_fits.html">tor_filter_label_rate_fits()</a></code> </p>
         </td>
-        <td><p>Rename proteins based on protein mapping file</p></td>
+        <td><p>Filter label rate fits</p></td>
       </tr><tr>
         <!--  -->
         <td>
           <p><code><a href="tor_filter_peptides_by_spectral_fit_quality.html">tor_filter_peptides_by_spectral_fit_quality()</a></code> </p>
         </td>
         <td><p>Filter peptides</p></td>
+      </tr><tr>
+        <!--  -->
+        <td>
+          <p><code><a href="tor_recode_protein_ids.html">tor_recode_protein_ids()</a></code> </p>
+        </td>
+        <td><p>Rename proteins based on protein mapping file</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-information-functions" class="hasAnchor"><a href="#section-information-functions" class="anchor"></a>Information functions</h2>
+          <p class="section-desc"><p>Functions that add additional information to the dataset.</p></p>
+        </th>
+      </tr>
+      <tr>
+        <!--  -->
+        <td>
+          <p><code><a href="tor_add_metadata.html">tor_add_metadata()</a></code> </p>
+        </td>
+        <td><p>Add metadata</p></td>
+      </tr><tr>
+        <!--  -->
+        <td>
+          <p><code><a href="tor_add_protein_counts_info.html">tor_add_protein_counts_info()</a></code> </p>
+        </td>
+        <td><p>Add protein counts info</p></td>
+      </tr><tr>
+        <!--  -->
+        <td>
+          <p><code><a href="tor_add_uniprot_info.html">tor_add_uniprot_info()</a></code> </p>
+        </td>
+        <td><p>Add uniprot information</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -224,12 +262,6 @@
       </tr><tr>
         <!--  -->
         <td>
-          <p><code><a href="tor_add_uniprot_info.html">tor_add_uniprot_info()</a></code> </p>
-        </td>
-        <td><p>Add uniprot information</p></td>
-      </tr><tr>
-        <!--  -->
-        <td>
           <p><code><a href="tor_fetch_uniprot_proteins.html">tor_fetch_uniprot_proteins()</a></code> </p>
         </td>
         <td><p>Fetch uniprot information</p></td>
@@ -240,6 +272,26 @@
         </td>
         <td><p>Fetch uniprot species</p></td>
       </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-utility-functions" class="hasAnchor"><a href="#section-utility-functions" class="anchor"></a>Utility functions</h2>
+          <p class="section-desc"><p>Miscellaneous utility functions</p></p>
+        </th>
+      </tr>
+      <tr>
+        <!--  -->
+        <td>
+          <p><code><a href="tor_remove_list_columns.html">tor_remove_list_columns()</a></code> </p>
+        </td>
+        <td><p>Remove complex data</p></td>
+      </tr><tr>
+        <!--  -->
+        <td>
+          <p><code><a href="tor_show_package_structure.html">tor_show_package_structure()</a></code> </p>
+        </td>
+        <td><p>Generate flow chart</p></td>
+      </tr>
     </tbody>
     </table>
   </div>
@@ -247,10 +299,12 @@
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#section-data-processing">Data processing</a></li>
+      <li><a href="#section-data-reading-and-preparation">Data reading and preparation</a></li>
+      <li><a href="#section-information-functions">Information functions</a></li>
       <li><a href="#section-calculation-functions">Calculation functions</a></li>
       <li><a href="#section-visualization-functions">Visualization functions</a></li>
       <li><a href="#section-protein-database-functions">Protein database functions</a></li>
+      <li><a href="#section-utility-functions">Utility functions</a></li>
     </ul>
   </div>
 </div>
