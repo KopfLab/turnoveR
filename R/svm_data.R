@@ -186,41 +186,4 @@ tor_calculate_labeled_fraction <- function(data, unlabeled_col = "amp_ulab", lab
   return(data)
 }
 
-# finished -- except for maybe a few more checks AND allow for overwriting default column names
-# Q: are we actuall still using this one or is it going to be filtering after the degradation curves are calculated?
-
-#' Filter data based on number of timepoints where the peptide is identified
-#' @description (Step 11 in workflow)
-#' @param  data the data to be filtered
-#' @param min number of timepoints present
-filter_min_timepoints <-function(data, min_timepoint_present = 3, quiet = FALSE) {
-    #checking whether data file was supplied, and in correct format
-    if (missing(data))
-      stop("need to supply the data frame", call. = FALSE)
-    if (!is.data.frame(data)) {
-      glue("wrong data type supplied: {class(data)[1]}") %>% stop(call. = FALSE)
-    }
-
-    # @TODO: maybe add safety checks that the expected columns are present: protein, isopep, etc.
-
-    filtered_data <- data %>%
-      group_by(protein, isopep) %>%
-      # calculate the number of time points where the peptide is identified
-      mutate(n_time_points_identified = n()) %>% ungroup() %>%
-      # filter out the ones that are not present in enough time points
-      filter(n_time_points_identified > min_timepoint_present)
-
-    # information for user
-    if (!quiet) {
-      n_original <- nrow(data)
-      n_kept <- nrow(filtered_data)
-      glue(
-        "Info: kept {n_kept} of {n_original} ({round(n_kept/n_original*100, 1)}%) rows"
-      ) %>%
-        message()
-    }
-    return(filtered_data)
-  }
-
-
 

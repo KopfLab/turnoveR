@@ -1,6 +1,6 @@
 Package: turnoveR
 Title: Processing tools for protein degradation experiments.
-Version: 0.2.0.9000
+Version: 0.2.1.9000
 Authors@R: c(
     person("Corinne", "Walsh", , "corinne.walsh@colorado.edu", role = c("aut", "cre")),
     person("Sebastian", "Kopf", , "sebastian.kopf@colorado.edu", role = "aut")
