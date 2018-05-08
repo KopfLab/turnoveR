@@ -1,9 +1,0 @@
----
-title: "Analysis Demonstration"
-output:
-  html_document: default
-editor_options:
-  chunk_output_type: console
----
-
-Coming soon...
