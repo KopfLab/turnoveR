@@ -108,3 +108,72 @@ guess_metadata <- function(smv_data, save_file = "metadata.xlsx") {
 
   return(metadata)
 }
+
+# internal functions ======
+
+# function to reliably turn a list of lists into a data frame
+# @param lists_df a data frame with a column that has lists in each row
+# @param column the name of the column that has the list
+# @param unnest_single_values whether to unnest single values (values that have a none or only a single entry for all retrieve records)
+unpack_lists_data_frame <- function(lists_df, column = lists, unnest_single_values = TRUE) {
+
+  # convert lists into data frame format
+  lists_df <-
+    lists_df %>%
+    rename(lists = !!enquo(column)) %>%
+    mutate(
+      nr = row_number(),
+      name = map(lists, names)
+    ) %>% unnest(name, .drop = FALSE) %>%
+    mutate(
+      class = map2_chr(lists, name, ~class(.x[[.y]])[1]),
+      length = map2_int(lists, name, ~length(.x[[.y]])),
+      value = map2(lists, name, ~.x[[.y]]),
+      name = str_to_lower(name)
+    )
+
+  # data classes
+  data_classes <-
+    lists_df %>%
+    group_by(name) %>%
+    summarize(
+      data_class = unique(class)[1],
+      value_max_n = as.integer(max(length)))
+
+  # lists wide
+  lists_df_wide <- lists_df %>%
+    select(nr, name, value) %>%
+    spread(name, value) %>%
+    select(-nr)
+
+  # fill NULL values with NA to not loose records during unnesting (except for lists)
+  for (i in 1:nrow(data_classes)) {
+    lists_df_wide <-
+      with(data_classes[i,], {
+        # make sure the function exists
+        if (exists(data_class)) {
+          if (data_class %in% c("character", "integer", "numeric"))
+            default_value <- do.call(str_c("as.", data_class), args = list(NA))
+          else
+            default_value <- do.call(data_class, args=list())
+          # note, could also do this with a right_join back in (but perhaps slower?)
+          mutate(lists_df_wide,
+                 !!name := map(!!sym(name), ~if (is.null(.x)) { default_value } else { .x }))
+        } else {
+          # don't do anything if it's not a standard class
+          lists_df_wide
+        }
+      })
+  }
+
+  # unnest all the ones that have only single value
+  if (unnest_single_values) {
+    unnest_cols <- data_classes %>%
+      filter(value_max_n == 1, data_class %in% c("character", "integer", "numeric")) %>%
+      {.$name}
+    lists_df_wide <- unnest(lists_df_wide, !!!syms(unnest_cols), .drop = FALSE) %>%
+      select(!!!syms(unnest_cols), everything())
+  }
+
+  return(lists_df_wide)
+}

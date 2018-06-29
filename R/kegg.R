@@ -223,62 +223,10 @@ tor_fetch_kegg_details <- function(kegg_id, unnest_single_values = TRUE, ..., qu
   if (nrow(query_results) == 0)
     stop("KEGG API queries did not return any results, cannot process further", call. = FALSE)
 
-  # convert info into data frame format
-  info_df <-
-    query_results %>%
-    mutate(
-      nr = row_number(),
-      name = map(kegg_info, names)
-    ) %>% unnest(name, .drop = FALSE) %>%
-    mutate(
-      class = map2_chr(kegg_info, name, ~class(.x[[.y]])[1]),
-      length = map2_int(kegg_info, name, ~length(.x[[.y]])),
-      value = map2(kegg_info, name, ~.x[[.y]]),
-      name = str_to_lower(name)
-    )
-
-  # info classes
-  info_classes <-
-    info_df %>%
-    group_by(name) %>%
-    summarize(
-      info_class = unique(class)[1],
-      value_max_n = as.integer(max(length)))
-
-  # wide info
-  info_df_wide <- info_df %>%
-    select(nr, name, value) %>%
-    spread(name, value) %>%
-    select(-nr)
-
-  # fill NULL values with NA to not loose records during unnesting (except for lists)
-  for (i in 1:nrow(info_classes)) {
-    info_df_wide <-
-      with(info_classes[i,], {
-        # make sure the function exists
-        if (exists(info_class)) {
-          if (info_class %in% c("character", "integer", "numeric"))
-            default_value <- do.call(str_c("as.", info_class), args = list(NA))
-          else
-            default_value <- do.call(info_class, args=list())
-          # note, could also do this with a right_join back in (but perhaps slower?)
-          mutate(info_df_wide,
-                 !!name := map(!!sym(name), ~if (is.null(.x)) { default_value } else { .x }))
-        } else {
-          # don't do anything if it's not a standard class
-          info_df_wide
-        }
-      })
-  }
-
-  # unnest all the ones that have only single value
-  if (unnest_single_values) {
-    unnest_cols <- info_classes %>%
-      filter(value_max_n == 1, info_class %in% c("character", "integer", "numeric")) %>%
-      {.$name}
-    info_df_wide <- unnest(info_df_wide, !!!syms(unnest_cols), .drop = FALSE) %>%
-      select(!!!syms(unnest_cols), everything())
-  }
+  # unpack list results
+  info_df_wide <- unpack_lists_data_frame(
+    query_results, column = kegg_info,
+    unnest_single_values = unnest_single_values)
 
   # check for entry
   if ("entry" %in% names(info_df_wide))
