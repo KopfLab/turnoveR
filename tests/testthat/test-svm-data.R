@@ -51,14 +51,6 @@ test_that("tor_calculate_labeled_fraction works", {
   # test that fraculab and fraclab calculations are correct
 })
 
-#tests for "filter_min_timepoints" function
-test_that("filter_min_timepoints works", {
-
-  # - test that data file is correct format
-  expect_error(filter_min_timepoints())
-  expect_error(filter_min_timepoints(5), "wrong data type")
-
-})
 
 
 
